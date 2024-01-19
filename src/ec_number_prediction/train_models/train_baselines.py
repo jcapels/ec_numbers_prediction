@@ -1,7 +1,7 @@
 import torch
 from plants_sm.models.fc.fc import DNN
 
-from train_models.pipeline_runner import PipelineRunner
+from ec_number_prediction.train_models.pipeline_runner import PipelineRunner
 
 
 def train_dnn_baselines(model: str):
@@ -84,10 +84,3 @@ def train_dnn_baselines_merged(model: str):
                                                       objective="max",
                                                       model_name=f"DNN_{model}_baseline")
 
-
-if __name__ == "__main__":
-    import sys
-
-    model = sys.argv[1]
-    train_dnn_baselines(model)
-    train_dnn_baselines_merged(model)

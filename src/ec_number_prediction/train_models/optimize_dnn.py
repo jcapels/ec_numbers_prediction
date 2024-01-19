@@ -1,7 +1,7 @@
 import torch
 from plants_sm.models.fc.fc import DNN
 
-from train_models.pipeline_runner import PipelineRunner
+from ec_number_prediction.train_models.pipeline_runner import PipelineRunner
 
 
 def train_dnn_optimization(set_: str, model: str, epochs: int = 30,
@@ -241,11 +241,3 @@ def train_dnn_trials_merged(set_: str, model: str, epochs: int = 30,
                                                       device="cuda:0", logger_path="./logs.log",
                                                       progress=200,
                                                       model_name=f"DNN_{model}_trial_{set_}")
-
-
-if __name__ == "__main__":
-    import sys
-
-    set_ = sys.argv[1]
-    model = sys.argv[2]
-    train_dnn_optimization(set_, model)
