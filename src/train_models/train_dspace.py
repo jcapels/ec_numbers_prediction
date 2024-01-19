@@ -41,3 +41,7 @@ def train_dspace_merged():
                                                       objective="max",
                                                       model_name=f"DSPACE_merged"
                                                       )
+
+if __name__ == "__main__":
+    train_dspace()
+    train_dspace_merged()

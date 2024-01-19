@@ -40,3 +40,7 @@ def train_deep_ec_merged():
                                                       objective="max",
                                                       model_name="DeepEC_merged"
                                                       )
+
+if __name__ == "__main__":
+    train_deep_ec()
+    train_deep_ec_merged()
