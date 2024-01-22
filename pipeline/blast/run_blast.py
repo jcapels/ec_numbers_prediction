@@ -1,5 +1,3 @@
-import os
-from plants_sm.alignments.alignment import BLAST
 import pandas as pd
 import numpy as np
 import os

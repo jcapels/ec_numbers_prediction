@@ -11,7 +11,9 @@ class UniprotScraper(luigi.Task):
         return DownloadSwissProt(), DownloadTrembl(), DownloadUniref()
 
     def output(self):
-        return luigi.LocalTarget('swiss_prot_ec.csv'), luigi.LocalTarget('trembl_prot_ec.csv'), luigi.LocalTarget('cluster_representatives.pkl')
+        return (luigi.LocalTarget('swiss_prot_ec.csv'),
+                luigi.LocalTarget('trembl_prot_ec.csv'),
+                luigi.LocalTarget('cluster_representatives.pkl'))
 
     def run(self):
         UniprotXmlParser(self.input()[0].path).parse(self.output()[0].path)

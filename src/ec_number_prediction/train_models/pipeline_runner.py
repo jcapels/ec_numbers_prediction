@@ -1,22 +1,15 @@
 from logging import Logger
 import os
-import sys
 from typing import Union
 
 import numpy as np
-from plants_sm.models.ec_number_prediction.clean import CLEANSupConH
-from plants_sm.models.ec_number_prediction.d_space import DSPACE
-import torch
 from plants_sm.data_structures.dataset.single_input_dataset import SingleInputDataset
-from plants_sm.models.fc.fc import DNN
 from plants_sm.models.pytorch_model import PyTorchModel
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import pandas as pd
 from sklearn.metrics import precision_score, recall_score, f1_score, coverage_error, average_precision_score
-
-from plants_sm.models.ec_number_prediction.deepec import DeepEC, DeepECCNN
 
 logger = Logger("train_model")
 

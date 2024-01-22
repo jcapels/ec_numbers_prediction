@@ -5,6 +5,8 @@ __pycache__/
 
 .idea
 
+all_data/
+
 runs
 compound_protein_interaction
 # C extensions
