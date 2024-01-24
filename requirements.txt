@@ -1,4 +1,4 @@
-plants_sm @ https://github.com/jcapels/PlantsSM.git
+plants_sm @ git+https://github.com/jcapels/PlantsSM.git
 luigi
-skmultilearn
+scikit-multilearn
 

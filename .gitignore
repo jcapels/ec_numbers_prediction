@@ -6,6 +6,7 @@ __pycache__/
 .idea
 
 all_data/
+models/
 
 runs
 compound_protein_interaction

@@ -14,28 +14,9 @@ from plants_sm.utilities.utils import convert_csv_to_fasta
 from ec_number_prediction import SRC_PATH
 from ec_number_prediction._utils import get_final_labels
 
-
-def make_blast_prediction(dataset_path: str, sequences_field: str,
-                          ids_field: str, database_folder: str, database_name: str,
-                          output_path: str, binarised=False):
-    """
-    Make a prediction using BLAST.
-
-    Parameters
-    ----------
-    dataset_path: str
-        Path to the dataset in a csv format.
-    sequences_field: str
-        Path to the database.
-    ids_field: str
-        Field containing the ids.
-    database_folder: str
-        Folder with the database in csv and BLAST database format.
-    output_path: str
-        Path to the output file.
-    binarised: bool
-        Binarise input
-    """
+def _make_blast_prediction(dataset_path: str, sequences_field: str,
+                            ids_field: str, database_folder: str, database_name: str, 
+                            binarised=False):
     current_directory = os.getcwd()
     os.chdir(database_folder)
     convert_csv_to_fasta(dataset_path, sequences_field, ids_field, 'temp.fasta')
@@ -72,11 +53,37 @@ def make_blast_prediction(dataset_path: str, sequences_field: str,
     results['CustomOrder'] = pd.Categorical(results['qseqid'], categories=dataset[ids_field], ordered=True)
     results.sort_values('CustomOrder', inplace=True)
     results.drop(columns=["CustomOrder"], inplace=True)
+    results.reset_index(drop=True, inplace=True)
 
     os.remove("temp.fasta")
     os.remove("temp_results_file")
 
     os.chdir(current_directory)
+    return results
+
+def make_blast_prediction(dataset_path: str, sequences_field: str,
+                          ids_field: str, database_folder: str, database_name: str,
+                          output_path: str, binarised=False):
+    """
+    Make a prediction using BLAST.
+
+    Parameters
+    ----------
+    dataset_path: str
+        Path to the dataset in a csv format.
+    sequences_field: str
+        Path to the database.
+    ids_field: str
+        Field containing the ids.
+    database_folder: str
+        Folder with the database in csv and BLAST database format.
+    output_path: str
+        Path to the output file.
+    binarised: bool
+        Binarise input
+    """
+    results = _make_blast_prediction(dataset_path, sequences_field, ids_field, database_folder,
+                                     database_name, output_path, binarised)
     results.to_csv(output_path, index=False)
 
 
@@ -152,6 +159,35 @@ def _generate_ec_number_from_model_predictions(ECs: list) -> Tuple[list, list, l
 
     return EC1, EC2, EC3, EC4
 
+def _make_predictions_with_model(dataset, pipeline, device, all_data):
+    
+    pipeline.steps["place_holder"][-1].device = device
+    if "cuda" in device:
+        pipeline.steps["place_holder"][-1].num_gpus = 1
+    pipeline.models[0].model.to(device)
+    pipeline.models[0].device = device
+    predictions = pipeline.predict(dataset)
+    if all_data:
+        path = os.path.join(SRC_PATH, "labels_names_all_data.pkl")
+    else:
+        path = os.path.join(SRC_PATH, "labels_names.pkl")
+
+    results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
+    labels_names = read_pickle(path)
+    # get all the column indexes where the value is 1
+    indices = [np.where(row == 1)[0].tolist() for row in predictions]
+    labels_names = np.array(labels_names)
+
+    ids = dataset.dataframe[dataset.instances_ids_field]
+    for i in range(len(indices)):
+        label_predictions = labels_names[indices[i]]
+
+        EC1, EC2, EC3, EC4 = _generate_ec_number_from_model_predictions(label_predictions)
+        label_predictions = [";".join(EC1)] + [";".join(EC2)] + [";".join(EC3)] + [";".join(EC4)]
+        results_dataframe.loc[i] = [ids[i]] + label_predictions
+
+    return results_dataframe
+
 
 def make_predictions_with_model(pipeline_path: str, dataset_path: str, sequences_field: str,
                                 ids_field: str, output_path: str, all_data: bool = True,
@@ -179,35 +215,36 @@ def make_predictions_with_model(pipeline_path: str, dataset_path: str, sequences
     dataset = SingleInputDataset.from_csv(dataset_path, representation_field=sequences_field,
                                           instances_ids_field=ids_field)
     pipeline = Pipeline.load(pipeline_path)
-    pipeline.steps["place_holder"][-1].device = device
-    if "cuda" in device:
-        pipeline.steps["place_holder"][-1].num_gpus = 1
-    pipeline.models[0].model.to(device)
-    pipeline.models[0].device = device
-    predictions = pipeline.predict(dataset)
-    if all_data:
-        path = os.path.join(SRC_PATH, "labels_names_all_data.pkl")
-    else:
-        path = os.path.join(SRC_PATH, "labels_names.pkl")
 
-    results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
-    labels_names = read_pickle(path)
-    # get all the column indexes where the value is 1
-    indices = [np.where(row == 1)[0].tolist() for row in predictions]
-    labels_names = np.array(labels_names)
-
-    ids = dataset.dataframe[dataset.instances_ids_field]
-    for i in range(len(indices)):
-        label_predictions = labels_names[indices[i]]
-
-        EC1, EC2, EC3, EC4 = _generate_ec_number_from_model_predictions(label_predictions)
-        label_predictions = [";".join(EC1)] + [";".join(EC2)] + [";".join(EC3)] + [";".join(EC4)]
-        results_dataframe.loc[i] = [ids[i]] + label_predictions
+    results_dataframe = _make_predictions_with_model(dataset, pipeline, device, all_data)
 
     results_dataframe.to_csv(output_path, index=False)
 
+def determine_ensemble_predictions(threshold=2, *model_predictions):
+    model_predictions = list(model_predictions)
 
-def make_ensemble_prediction(pipelines: List[str], blast_database: str, all_data: bool = True):
+    for i, model_prediction in enumerate(model_predictions):
+        model_predictions[i] = np.array(model_prediction)
+
+
+    predictions_voting = np.zeros_like(model_predictions[0])
+
+    for i in range(model_predictions[0].shape[0]):
+        # Combine conditions into a single array and sum along the second axis
+        combined_conditions = np.sum(np.array([model_predictions[j][i] for j in range(len(model_predictions))]), axis=0)
+
+        # Apply the threshold condition
+        predictions_voting[i] = (combined_conditions >= threshold).astype(int)
+
+    # If you want to ensure the resulting array is of integer type
+    predictions_voting = predictions_voting.astype(int)
+    return predictions_voting
+
+
+def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_field: str,
+                                ids_field: str, output_path: str, blast_database, blast_database_folder_path, 
+                                all_data: bool = True,
+                                device: str = "cpu"):
     """
     Make an ensemble prediction.
 
@@ -220,4 +257,70 @@ def make_ensemble_prediction(pipelines: List[str], blast_database: str, all_data
     all_data: bool
         Use all data from the dataset.
     """
-    pass
+    results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
+    results = []
+    for pipeline in pipelines:
+        
+        dataset = SingleInputDataset.from_csv(dataset_path, representation_field=sequences_field,
+                                                                   instances_ids_field=ids_field)
+        pipeline = Pipeline.load(pipeline)
+        pipeline.steps["place_holder"][-1].device = device
+        if "cuda" in device:
+            pipeline.steps["place_holder"][-1].num_gpus = 1
+        pipeline.models[0].model.to(device)
+        pipeline.models[0].device = device
+        predictions = pipeline.predict(dataset)
+        
+        results.append(predictions)
+    
+    blast_results = _make_blast_prediction(dataset_path, sequences_field, ids_field, 
+                                           blast_database_folder_path, blast_database)
+    
+    if all_data:
+        path = os.path.join(SRC_PATH, "labels_names_all_data.pkl")
+    else:
+        path = os.path.join(SRC_PATH, "labels_names.pkl")
+
+    labels_names = read_pickle(path)
+
+    blast_results_array = np.zeros((len(blast_results), len(labels_names)))
+    for i, row in blast_results.iterrows():
+        EC1 = row["EC1"]
+        EC2 = row["EC2"]
+        EC3 = row["EC3"]
+        EC4 = row["EC4"]
+        if isinstance(EC1, float):
+            EC1 = ""
+        if isinstance(EC2, float):
+            EC2 = ""
+        if isinstance(EC3, float):
+            EC3 = ""
+        if isinstance(EC4, float):
+            EC4 = ""
+        EC1 = EC1.split(";")
+        EC2 = EC2.split(";")
+        EC3 = EC3.split(";")
+        EC4 = EC4.split(";")
+        for EC in EC1 + EC2 + EC3 + EC4:
+            try:
+                index = labels_names.index(EC)
+                blast_results_array[i, index] = 1
+            except ValueError:
+                pass
+    
+    determined_predictions = determine_ensemble_predictions(2, *results, blast_results_array)
+    results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
+    labels_names = read_pickle(path)
+    # get all the column indexes where the value is 1
+    indices = [np.where(row == 1)[0].tolist() for row in determined_predictions]
+    labels_names = np.array(labels_names)
+
+    ids = dataset.dataframe[dataset.instances_ids_field]
+    for i in range(len(indices)):
+        label_predictions = labels_names[indices[i]]
+
+        EC1, EC2, EC3, EC4 = _generate_ec_number_from_model_predictions(label_predictions)
+        label_predictions = [";".join(EC1)] + [";".join(EC2)] + [";".join(EC3)] + [";".join(EC4)]
+        results_dataframe.loc[i] = [ids[i]] + label_predictions
+    
+    results_dataframe.to_csv(output_path, index=False)
