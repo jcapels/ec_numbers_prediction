@@ -2,7 +2,7 @@ import luigi
 import numpy as np
 import pandas as pd
 
-from pipeline.multi_label_binarizer import MultiLabelBinarizer
+from ec_number_prediction.data_processing_pipeline.multi_label_binarizer import MultiLabelBinarizer
 
 
 class UnderrepresentedLabelsRemoval(luigi.Task):

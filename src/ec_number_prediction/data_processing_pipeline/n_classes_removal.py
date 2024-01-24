@@ -1,7 +1,7 @@
 import luigi
 import pandas as pd
 
-from pipeline.underrepresented_labels_removal import UnderrepresentedLabelsRemoval
+from ec_number_prediction.data_processing_pipeline.underrepresented_labels_removal import UnderrepresentedLabelsRemoval
 
 
 class NClassesRemoval(luigi.Task):

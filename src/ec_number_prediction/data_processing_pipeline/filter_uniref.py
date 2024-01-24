@@ -2,7 +2,7 @@ import pickle
 import luigi
 import pandas as pd
 
-from pipeline.scrape_uniprot import UniprotScraper
+from ec_number_prediction.data_processing_pipeline.scrape_uniprot import UniprotScraper
 
 
 class FilterByUniRef90(luigi.Task):

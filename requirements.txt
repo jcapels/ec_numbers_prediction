@@ -1,3 +1,4 @@
 plants_sm @ https://github.com/jcapels/PlantsSM.git
 luigi
+skmultilearn
 

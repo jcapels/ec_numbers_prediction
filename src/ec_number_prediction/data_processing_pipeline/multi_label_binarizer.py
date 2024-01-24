@@ -3,7 +3,7 @@ import luigi
 import numpy as np
 import pandas as pd
 
-from pipeline.enrichment_with_trembl import EnrichmentWithTrembl
+from ec_number_prediction.data_processing_pipeline.enrichment_with_trembl import EnrichmentWithTrembl
 
 
 class MultiLabelBinarizer(luigi.Task):

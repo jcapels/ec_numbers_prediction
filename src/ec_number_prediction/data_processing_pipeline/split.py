@@ -7,7 +7,7 @@ import pandas as pd
 
 from skmultilearn.model_selection import IterativeStratification
 
-from pipeline.n_classes_removal import NClassesRemoval
+from ec_number_prediction.data_processing_pipeline.n_classes_removal import NClassesRemoval
 
 logger = logging.getLogger('luigi-interface')
 

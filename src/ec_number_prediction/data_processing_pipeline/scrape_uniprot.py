@@ -1,8 +1,9 @@
 import luigi
 
-from pipeline.uniprot_xml_parser import UniprotXmlParser
-from pipeline.download_uniprot import DownloadSwissProt, DownloadTrembl, DownloadUniref
-from pipeline.uniref_xml_parser import UniRefXmlParser
+from ec_number_prediction.data_processing_pipeline.uniprot_xml_parser import UniprotXmlParser
+from ec_number_prediction.data_processing_pipeline.download_uniprot import (DownloadSwissProt, DownloadTrembl,
+                                                                            DownloadUniref)
+from ec_number_prediction.data_processing_pipeline.uniref_xml_parser import UniRefXmlParser
 
 
 class UniprotScraper(luigi.Task):
