@@ -12,7 +12,8 @@ from plants_sm.pipeline.pipeline import Pipeline
 from plants_sm.utilities.utils import convert_csv_to_fasta
 
 from ec_number_prediction import SRC_PATH
-from ec_number_prediction._utils import get_final_labels
+from ec_number_prediction._utils import get_final_labels, _download_blast_database_to_cache, _download_pipeline_to_cache, convert_fasta_to_csv
+from ec_number_prediction.enumerators import BLASTDatabases
 
 def _make_blast_prediction(dataset_path: str, sequences_field: str,
                             ids_field: str, database_folder: str, database_name: str, 
@@ -21,7 +22,11 @@ def _make_blast_prediction(dataset_path: str, sequences_field: str,
     os.chdir(database_folder)
     convert_csv_to_fasta(dataset_path, sequences_field, ids_field, 'temp.fasta')
 
-    blast = BLAST(database_name)
+    database_names = {
+        "BLAST all data": BLASTDatabases.BLAST_ALL_DATA.value,
+    }
+
+    blast = BLAST(database_names[database_name])
     blast.run('temp.fasta', 'temp_results_file', 1e-5, 1)
     database = pd.read_csv("database.csv")
     blast.associate_to_ec(database, "temp_results_file")
@@ -44,7 +49,7 @@ def _make_blast_prediction(dataset_path: str, sequences_field: str,
 
     for column in results.columns:
         if column != "qseqid":
-            not_in_results[column] = 0.0
+            not_in_results.loc[:, column] = 0.0
 
     not_in_results.columns = results.columns
     results = pd.concat([results, not_in_results])
@@ -83,8 +88,65 @@ def make_blast_prediction(dataset_path: str, sequences_field: str,
         Binarise input
     """
     results = _make_blast_prediction(dataset_path, sequences_field, ids_field, database_folder,
-                                     database_name, output_path, binarised)
+                                     database_name, binarised)
     results.to_csv(output_path, index=False)
+
+def predict_with_blast(dataset_path: str, sequences_field: str,
+                       ids_field: str, database_name: str,
+                       output_path: str, binarised=False):
+    """
+    Make a prediction using BLAST.
+
+    Parameters
+    ----------
+    dataset_path: str
+        Path to the dataset in a csv format.
+    sequences_field: str
+        Path to the database.
+    ids_field: str
+        Field containing the ids.
+    database_folder: str
+        Folder with the database in csv and BLAST database format.
+    output_path: str
+        Path to the output file.
+    binarised: bool
+        Binarise input
+    """
+    database_path =_download_blast_database_to_cache(database_name)
+    make_blast_prediction(dataset_path, sequences_field, ids_field, database_path,
+                            database_name, output_path, binarised)
+    
+def predict_with_blast_from_fasta(fasta_path: str, database_name: str,
+                          output_path: str, binarised=False):
+     """
+     Make a prediction using BLAST.
+    
+     Parameters
+     ----------
+     dataset_path: str
+          Path to the dataset in a csv format.
+     sequences_field: str
+          Path to the database.
+     ids_field: str
+          Field containing the ids.
+     database_folder: str
+          Folder with the database in csv and BLAST database format.
+     output_path: str
+          Path to the output file.
+     binarised: bool
+          Binarise input
+     """
+     current_directory = os.getcwd()
+     temp_csv = os.path.join(current_directory, "temp.csv")
+     database_path =_download_blast_database_to_cache(database_name)
+     convert_fasta_to_csv(fasta_path, temp_csv)
+     try:
+        make_blast_prediction(temp_csv, "sequence", "id", database_path,
+                                database_name, output_path, binarised)
+        os.remove(temp_csv)
+     except Exception as e:
+        os.remove(temp_csv)
+        raise Exception(e)
 
 
 def get_ec_from_regex_match(match: re.Match) -> Union[str, None]:
@@ -162,8 +224,10 @@ def _generate_ec_number_from_model_predictions(ECs: list) -> Tuple[list, list, l
 def _make_predictions_with_model(dataset, pipeline, device, all_data):
     
     pipeline.steps["place_holder"][-1].device = device
+    pipeline.steps["place_holder"][-1].model.to(device)
     if "cuda" in device:
         pipeline.steps["place_holder"][-1].num_gpus = 1
+
     pipeline.models[0].model.to(device)
     pipeline.models[0].device = device
     predictions = pipeline.predict(dataset)
@@ -219,6 +283,31 @@ def make_predictions_with_model(pipeline_path: str, dataset_path: str, sequences
     results_dataframe = _make_predictions_with_model(dataset, pipeline, device, all_data)
 
     results_dataframe.to_csv(output_path, index=False)
+
+def predict_with_model(pipeline: str, dataset_path: str, sequences_field: str,
+                          ids_field: str, output_path: str, all_data: bool = True,
+                            device: str = "cpu"):
+    pipeline_path = _download_pipeline_to_cache(pipeline)
+    make_predictions_with_model(pipeline_path=pipeline_path, 
+                                dataset_path=dataset_path, 
+                                sequences_field=sequences_field, 
+                                ids_field=ids_field, 
+                                output_path=output_path, 
+                                all_data=all_data, device=device)
+    
+def predict_with_model_from_fasta(pipeline: str, fasta_path: str,
+                            output_path: str, all_data: bool = True,
+                            device: str = "cpu"):   
+    current_directory = os.getcwd()
+    temp_csv = os.path.join(current_directory, "temp.csv")
+    convert_fasta_to_csv(fasta_path, temp_csv)
+    try:
+        predict_with_model(pipeline, temp_csv, "sequence", "id", output_path, all_data, device)
+        os.remove(temp_csv)
+    except Exception as e:
+        os.remove(temp_csv)
+        raise Exception(e)
+
 
 def determine_ensemble_predictions(threshold=2, *model_predictions):
     model_predictions = list(model_predictions)
@@ -324,3 +413,54 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
         results_dataframe.loc[i] = [ids[i]] + label_predictions
     
     results_dataframe.to_csv(output_path, index=False)
+
+def predict_with_ensemble(dataset_path: str, sequences_field: str,
+                                ids_field: str, output_path: str,
+                                all_data: bool = True,
+                                device: str = "cpu"):
+    """
+    Make an ensemble prediction.
+
+    Parameters
+    ----------
+    pipelines: List[str]
+        List of paths to the pipelines.
+    blast_database: str
+        Path to the BLAST database.
+    all_data: bool
+        Use all data from the dataset.
+    """
+    esm2_3b = _download_pipeline_to_cache("DNN ESM2 3B all data")
+    prot_bert = _download_pipeline_to_cache("DNN ProtBERT all data")
+    esm1b = _download_pipeline_to_cache("DNN ESM1b all data")
+    pipelines = [esm2_3b, prot_bert, esm1b]
+    blast_database = "BLAST all data"
+    blast_database_folder_path = _download_blast_database_to_cache(blast_database)
+    make_ensemble_prediction(dataset_path, pipelines, sequences_field, ids_field, output_path, blast_database, 
+                                blast_database_folder_path, all_data, device)
+    
+def predict_with_ensemble_from_fasta(fasta_path: str,
+                                output_path: str,
+                                all_data: bool = True,
+                                device: str = "cpu"):
+    """
+    Make an ensemble prediction.
+
+    Parameters
+    ----------
+    pipelines: List[str]
+        List of paths to the pipelines.
+    blast_database: str
+        Path to the BLAST database.
+    all_data: bool
+        Use all data from the dataset.
+    """
+    current_directory = os.getcwd()
+    temp_csv = os.path.join(current_directory, "temp.csv")
+    convert_fasta_to_csv(fasta_path, temp_csv)
+    try:
+        predict_with_ensemble(temp_csv, "sequence", "id", output_path, all_data, device)
+        os.remove(temp_csv)
+    except Exception as e:
+        os.remove(temp_csv)
+        raise Exception(e)

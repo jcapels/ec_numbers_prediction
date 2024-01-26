@@ -2,6 +2,14 @@ import re
 import numpy as np
 import pandas as pd
 
+from ec_number_prediction.enumerators import ModelsDownloadPaths, BLASTDownloadPaths
+import requests
+import zipfile
+import os
+import shutil
+
+from Bio import SeqIO
+import csv
 
 def get_unique_labels_by_level(dataset, level):
     final_dataset_test = dataset.copy()
@@ -156,3 +164,130 @@ def divide_labels_by_EC_level(final_dataset, ec_label):
     print("EC1 is not null")
 
     return final_dataset
+
+def convert_fasta_to_csv(fasta_file: str, csv_file: str):
+    """
+    Converts a FASTA file to a CSV file.
+
+    Parameters
+    ----------
+    fasta_file : str
+        Path to the FASTA file.
+    csv_file : str
+        Path to the CSV file.
+    """
+    with open(fasta_file, "r") as fasta, open(csv_file, "w", newline="") as csv_out:
+        csv_writer = csv.writer(csv_out)
+        csv_writer.writerow(["id", "sequence"])  # Writing header
+        for record in SeqIO.parse(fasta, "fasta"):
+            csv_writer.writerow([record.id, str(record.seq)])
+
+
+
+def _download_and_unzip_file_to_cache(url: str, cache_path: str, method_name: str) -> str:
+    """
+    Downloads a file from a url and unzips it to a given cache path.
+
+    Parameters
+    ----------
+    url : str
+        URL of the file to download.
+    cache_path : str
+        Path to the cache folder.
+    method_name : str
+        Name of the method to download.
+
+    Returns
+    -------
+    str
+        Path to the downloaded file.
+    """
+    
+    pipeline_name_for_path = method_name.replace(" ", "_")
+    pipeline_cache_file = os.path.join(cache_path, f"{pipeline_name_for_path}.zip")
+
+    if os.path.exists(os.path.join(cache_path, pipeline_name_for_path)):
+        print(f"Pipeline {method_name} already in cache.")
+        return os.path.join(cache_path, pipeline_name_for_path)
+
+    if not os.path.exists(cache_path):
+        os.makedirs(cache_path)
+    
+    if not os.path.exists(pipeline_cache_file):
+        print(f"Downloading pipeline {method_name} to cache...")
+        with requests.get(url, stream=True) as r:
+            with open(pipeline_cache_file, "wb") as f:
+                shutil.copyfileobj(r.raw, f)
+
+    # unzip pipeline
+    print(f"Unzipping pipeline {method_name}...")
+    with zipfile.ZipFile(pipeline_cache_file, "r") as zip_ref:
+        zip_ref.extractall(cache_path)
+
+    os.remove(pipeline_cache_file)
+
+    return os.path.join(cache_path, pipeline_name_for_path)
+
+def _download_blast_database_to_cache(blast_database: str) -> str:
+    """
+    Downloads a BLAST database to the cache folder.
+    
+    Parameters
+    ----------
+    blast_database : str
+        Name of the BLAST database to download.
+    
+    Returns
+    -------
+    str
+        Path to the downloaded BLAST database.
+    """
+
+    databases = {
+        "BLAST all data": BLASTDownloadPaths.BLAST_ALL_DATA.value,
+    }
+
+    if blast_database not in databases:
+        raise Exception(f"BLAST database {blast_database} not found.")
+
+    database_url = databases[blast_database]
+
+    database_cache_path = os.path.join(os.path.expanduser("~"), ".ec_number_prediction", "blast_databases")
+
+    return _download_and_unzip_file_to_cache(database_url, database_cache_path, blast_database)
+    
+
+def _download_pipeline_to_cache(pipeline: str) -> str:
+    """
+    Downloads a pipeline to the cache folder.
+
+    Parameters
+    ----------
+    pipeline : str
+        Name of the pipeline to download.
+    
+    Returns
+    -------
+    str
+        Path to the downloaded pipeline.
+    """
+
+    pipelines = {
+        "DNN ESM1b all data": ModelsDownloadPaths.DNN_ESM1b_ALL_DATA.value,
+        "DNN ProtBERT all data": ModelsDownloadPaths.DNN_PROTBERT_ALL_DATA.value,
+        "DNN ESM2 3B all data": ModelsDownloadPaths.DNN_ESM2_3B_ALL_DATA.value,
+    }
+
+    if pipeline not in pipelines:
+        raise Exception(f"Pipeline {pipeline} not found.")
+    
+    pipeline_url = pipelines[pipeline]
+
+    pipeline_cache_path = os.path.join(os.path.expanduser("~"), ".ec_number_prediction", "pipelines")
+    pipeline_name_for_path = pipeline.replace(" ", "_")
+
+    if os.path.exists(os.path.join(pipeline_cache_path, pipeline_name_for_path)):
+        print(f"Pipeline {pipeline} already in cache.")
+        return os.path.join(pipeline_cache_path, pipeline_name_for_path)
+
+    return _download_and_unzip_file_to_cache(pipeline_url, pipeline_cache_path, pipeline)
