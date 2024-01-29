@@ -38,8 +38,3 @@ class TestBlast(unittest.TestCase):
                                 "all_data_database",
                                 "test_blast_predictions.csv",
                                 True)
-
-    def test_dummy_read_csv(self):
-        import pandas as pd 
-
-        pd.read_csv("temp.csv")
