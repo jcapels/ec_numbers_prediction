@@ -4,7 +4,7 @@ from plants_sm.models.fc.fc import DNN
 from ec_number_prediction.train_models.pipeline_runner import PipelineRunner
 
 
-def train_dnn_optimization(set_: str, model: str, epochs: int = 30,
+def train_dnn_optimization(set_: str, model: str, working_dir: str, epochs: int = 30,
                            dropout: float = None, batch_size: int = 64, lr: float = 0.0001,
                            weight_decay: float = 0.0):
     """
@@ -16,6 +16,8 @@ def train_dnn_optimization(set_: str, model: str, epochs: int = 30,
         Set to be used.
     model: str
         Model to be used.
+    working_dir
+        Working directory.
     epochs: int
         Number of epochs.
     dropout: float
@@ -76,7 +78,13 @@ def train_dnn_optimization(set_: str, model: str, epochs: int = 30,
     else:
         raise ValueError("Set not found. Options are: 1, 2, 3, 4, 5, 6.")
 
-    pipeline = PipelineRunner(model, last_sigmoid=True)
+    pipeline = PipelineRunner(model, last_sigmoid=True,
+                              features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics",
+                              )
     pipeline.train_model(fc_model, num_tokens=None, input_size=None, num_labels=None,
                          optimizer=torch.optim.Adam(params=fc_model.parameters(), lr=lr, weight_decay=weight_decay),
                          batch_size=batch_size, epochs=epochs,
@@ -88,7 +96,7 @@ def train_dnn_optimization(set_: str, model: str, epochs: int = 30,
                          model_name=f"DNN_{model}_optimization_set_{set_}")
 
 
-def train_dnn_optimization_all_data(set_: str, model: str, epochs: int = 30,
+def train_dnn_optimization_all_data(set_: str, model: str, working_dir: str , epochs: int = 30,
                                     dropout: float = None, batch_size: int = 64, lr: float = 0.0001,
                                     weight_decay: float = 0.0):
     """
@@ -100,6 +108,8 @@ def train_dnn_optimization_all_data(set_: str, model: str, epochs: int = 30,
         Set to be used.
     model: str
         Model to be used.
+    working_dir: str
+        Working directory.
     epochs: int
         Number of epochs.
     dropout: float
@@ -150,7 +160,13 @@ def train_dnn_optimization_all_data(set_: str, model: str, epochs: int = 30,
     else:
         raise ValueError("Set not found. Options are: 1, 2, 3, 4.")
 
-    pipeline = PipelineRunner(model, last_sigmoid=True)
+    pipeline = PipelineRunner(model, last_sigmoid=True,
+                              features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics",
+                              )
     pipeline.train_model_with_all_data(fc_model, num_tokens=None, input_size=None, num_labels=None,
                                        optimizer=torch.optim.Adam(params=fc_model.parameters(), lr=lr,
                                                                   weight_decay=weight_decay),
@@ -163,7 +179,7 @@ def train_dnn_optimization_all_data(set_: str, model: str, epochs: int = 30,
                                        model_name=f"DNN_{model}_optimization_set_{set_}_all_data")
 
 
-def train_dnn_trials_merged(set_: str, model: str, epochs: int = 30,
+def train_dnn_trials_merged(set_: str, model: str, working_dir: str, epochs: int = 30,
                             dropout: float = None, batch_size: int = 64, lr: float = 0.0001,
                             weight_decay: float = 0.0):
     """
@@ -175,6 +191,8 @@ def train_dnn_trials_merged(set_: str, model: str, epochs: int = 30,
         Set to be used.
     model: str
         Model to be used.
+    working_dir: str
+        Working directory.
     epochs: int
         Number of epochs.
     dropout: float
@@ -233,7 +251,13 @@ def train_dnn_trials_merged(set_: str, model: str, epochs: int = 30,
     else:
         raise ValueError("Set not found. Options are: 1, 2, 3, 4, 5, 6.")
 
-    pipeline = PipelineRunner(model, last_sigmoid=True)
+    pipeline = PipelineRunner(model, last_sigmoid=True,
+                              features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics",
+                              )
     pipeline.train_model_with_validation_train_merged(fc_model, num_tokens=None, input_size=None, num_labels=None,
                                                       optimizer=torch.optim.Adam(params=fc_model.parameters(), lr=lr,
                                                                                  weight_decay=weight_decay),

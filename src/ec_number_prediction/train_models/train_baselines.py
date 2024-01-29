@@ -4,7 +4,7 @@ from plants_sm.models.fc.fc import DNN
 from ec_number_prediction.train_models.pipeline_runner import PipelineRunner
 
 
-def train_dnn_baselines(model: str):
+def train_dnn_baselines(model: str, working_dir: str):
     """
     Train the DNN model with the training dataset and validate it with the validation dataset.
 
@@ -12,6 +12,8 @@ def train_dnn_baselines(model: str):
     ----------
     model: str
         Model to be used.
+    working_dir: str
+        Working directory.
     """
     if model == "esm2_t33_650M_UR50D":
         fc_model = DNN(1280, [], 2771, batch_norm=True, last_sigmoid=True)
@@ -32,7 +34,13 @@ def train_dnn_baselines(model: str):
                          "esm2_t30_150M_UR50D, esm2_t12_35M_UR50D, esm2_t6_8M_UR50D, esm2_t36_3B_UR50D, "
                          "prot_bert_vectors.")
 
-    pipeline = PipelineRunner(model, last_sigmoid=True)
+    pipeline = PipelineRunner(model, last_sigmoid=True,
+                              features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics",
+                              )
     pipeline.train_model(fc_model, num_tokens=None, input_size=None, num_labels=None,
                          optimizer=torch.optim.Adam(params=fc_model.parameters(), lr=0.0001),
                          batch_size=64, epochs=30,
@@ -44,7 +52,7 @@ def train_dnn_baselines(model: str):
                          model_name=f"DNN_{model}_baseline")
 
 
-def train_dnn_baselines_merged(model: str):
+def train_dnn_baselines_merged(model: str, working_dir: str):
     """
     Train the DNN model with the training and validation dataset.
 
@@ -52,6 +60,8 @@ def train_dnn_baselines_merged(model: str):
     ----------
     model: str
         Model to be used.
+    working_dir: str
+        Working directory.
     """
     if model == "esm2_t33_650M_UR50D":
         fc_model = DNN(1280, [], 2771, batch_norm=True, last_sigmoid=True)
@@ -72,7 +82,11 @@ def train_dnn_baselines_merged(model: str):
                          "esm2_t30_150M_UR50D, esm2_t12_35M_UR50D, esm2_t6_8M_UR50D, esm2_t36_3B_UR50D, "
                          "prot_bert_vectors.")
 
-    pipeline = PipelineRunner(model, last_sigmoid=True)
+    pipeline = PipelineRunner(model, last_sigmoid=True, features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics",)
     pipeline.train_model_with_validation_train_merged(fc_model, num_tokens=None, input_size=None, num_labels=None,
                                                       optimizer=torch.optim.Adam(params=fc_model.parameters(),
                                                                                  lr=0.0001),

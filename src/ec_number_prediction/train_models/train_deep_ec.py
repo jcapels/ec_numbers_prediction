@@ -5,12 +5,23 @@ from plants_sm.models.ec_number_prediction.deepec import DeepEC
 from .pipeline_runner import PipelineRunner
 
 
-def train_deep_ec():
+def train_deep_ec(working_dir: str):
     """
     Train the DeepEC model with the training dataset and validate it with the validation dataset.
+
+    Parameters
+    ----------
+    working_dir: str
+        Working directory.
     """
     model = DeepEC
-    pipeline = PipelineRunner("one_hot_encoding", last_sigmoid=True)
+    pipeline = PipelineRunner("one_hot_encoding", last_sigmoid=True,
+                              features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics",
+                              )
     pipeline.train_model(model, num_tokens=20, input_size=884,
                          num_labels=2771,
                          batch_size=64, epochs=30,
@@ -23,12 +34,23 @@ def train_deep_ec():
                          )
 
 
-def train_deep_ec_merged():
+def train_deep_ec_merged(working_dir: str):
     """
     Train the DeepEC model with the training and validation dataset.
+
+    Parameters
+    ----------
+    working_dir: str
+        Working directory.
     """
     model = DeepEC
-    pipeline = PipelineRunner("one_hot_encoding", last_sigmoid=True)
+    pipeline = PipelineRunner("one_hot_encoding", last_sigmoid=True,
+                              features_base_directory=working_dir,
+                              datasets_directory=f"{working_dir}/data",
+                              project_base_dir=working_dir,
+                              losses_directory=f"{working_dir}/losses",
+                              metrics_directory=f"{working_dir}/metrics"
+                              )
     pipeline.train_model_with_validation_train_merged(model, num_tokens=20, input_size=884,
                                                       num_labels=2771,
                                                       batch_size=64, epochs=30,
@@ -40,7 +62,3 @@ def train_deep_ec_merged():
                                                       objective="max",
                                                       model_name="DeepEC_merged"
                                                       )
-
-if __name__ == "__main__":
-    train_deep_ec()
-    train_deep_ec_merged()
