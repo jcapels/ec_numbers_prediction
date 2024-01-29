@@ -1,0 +1,16 @@
+model,metric,train,test
+models ensemble,mF1 overall,,0.9011672051082994
+models ensemble,mF1 level 1,,0.9824298528183728
+models ensemble,mF1 level 2,,0.959910337514822
+models ensemble,mF1 level 3,,0.9367085638980756
+models ensemble,mF1 level 4,,0.8959758756187785
+models ensemble,mPrecision overall,,0.9274756923443452
+models ensemble,mPrecision level 1,,0.9872059167621006
+models ensemble,mPrecision level 2,,0.9753453908463454
+models ensemble,mPrecision level 3,,0.9586089435931636
+models ensemble,mPrecision level 4,,0.9230611817744504
+models ensemble,mRecall overall,,0.885065468521875
+models ensemble,mRecall level 1,,0.9777060229925436
+models ensemble,mRecall level 2,,0.9459056006204488
+models ensemble,mRecall level 3,,0.9190300014924662
+models ensemble,mRecall level 4,,0.8799302573335052

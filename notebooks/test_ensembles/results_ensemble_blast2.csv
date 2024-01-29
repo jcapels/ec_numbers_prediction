@@ -1,0 +1,16 @@
+model,metric,train,test
+models + BLASTp ensemble,mF1 overall,,0.9090857401638838
+models + BLASTp ensemble,mF1 level 1,,0.9847829943445396
+models + BLASTp ensemble,mF1 level 2,,0.9638361075684267
+models + BLASTp ensemble,mF1 level 3,,0.9437041346970746
+models + BLASTp ensemble,mF1 level 4,,0.9041080984304914
+models + BLASTp ensemble,mPrecision overall,,0.9204416806398336
+models + BLASTp ensemble,mPrecision level 1,,0.9857465500883148
+models + BLASTp ensemble,mPrecision level 2,,0.9694753313089286
+models + BLASTp ensemble,mPrecision level 3,,0.9530772904477036
+models + BLASTp ensemble,mPrecision level 4,,0.9158385787176764
+models + BLASTp ensemble,mRecall overall,,0.9049003181814924
+models + BLASTp ensemble,mRecall level 1,,0.9838221109531012
+models + BLASTp ensemble,mRecall level 2,,0.958838940357804
+models + BLASTp ensemble,mRecall level 3,,0.9367325264343072
+models + BLASTp ensemble,mRecall level 4,,0.9001962105231905

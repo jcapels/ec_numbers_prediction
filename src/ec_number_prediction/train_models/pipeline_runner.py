@@ -442,8 +442,8 @@ class PipelineRunner:
 
         # create dataframe with the metrics for all datasets and models
 
-        if os.path.exists(os.path.join(self.project_base_dir, "results", "metrics", "metrics_merged.csv")):
-            metrics = pd.read_csv(os.path.join(self.project_base_dir, "results", "metrics", "metrics_merged.csv"))
+        if os.path.exists(os.path.join(self.project_base_dir, "results", "metrics", "metric_values.csv")):
+            metrics = pd.read_csv(os.path.join(self.project_base_dir, "results", "metrics", "metric_values.csv"))
         else:
             metrics = pd.DataFrame(columns=["model", "metric", "train", "test"])
 
@@ -457,7 +457,7 @@ class PipelineRunner:
                 metrics.at[row, dataset_names[i]] = dataset_metric[metric]
 
         os.makedirs(os.path.join(self.project_base_dir, "results", "metrics"), exist_ok=True)
-        metrics.to_csv(os.path.join(self.project_base_dir, "results", "metrics", "metrics_merged.csv"), index=False)
+        metrics.to_csv(os.path.join(self.project_base_dir, "results", "metrics", "metric_values.csv"), index=False)
 
         model.history["loss"].to_csv(os.path.join(self.losses_directory, f"{kwargs['model_name']}_loss_merged.csv"),
                                      index=False)
