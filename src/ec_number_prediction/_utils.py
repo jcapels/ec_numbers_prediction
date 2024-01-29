@@ -1,6 +1,7 @@
 import re
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from ec_number_prediction.enumerators import ModelsDownloadPaths, BLASTDownloadPaths
 import requests
@@ -213,11 +214,17 @@ def _download_and_unzip_file_to_cache(url: str, cache_path: str, method_name: st
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
     
-    if not os.path.exists(pipeline_cache_file):
-        print(f"Downloading pipeline {method_name} to cache...")
-        with requests.get(url, stream=True) as r:
-            with open(pipeline_cache_file, "wb") as f:
-                shutil.copyfileobj(r.raw, f)
+    print(f"Downloading pipeline {method_name} to cache...")
+    response = requests.get(url, stream=True)
+    # Sizes in bytes.
+    total_size = int(response.headers.get("content-length", 0))
+    block_size = 1024
+
+    with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
+        with open(pipeline_cache_file, "wb") as f:
+            for data in response.iter_content(block_size):
+                progress_bar.update(len(data))
+                f.write(data)
 
     # unzip pipeline
     print(f"Unzipping pipeline {method_name}...")
@@ -276,6 +283,9 @@ def _download_pipeline_to_cache(pipeline: str) -> str:
         "DNN ESM1b all data": ModelsDownloadPaths.DNN_ESM1b_ALL_DATA.value,
         "DNN ProtBERT all data": ModelsDownloadPaths.DNN_PROTBERT_ALL_DATA.value,
         "DNN ESM2 3B all data": ModelsDownloadPaths.DNN_ESM2_3B_ALL_DATA.value,
+        "DNN ESM2 3B trial 2 train plus validation": ModelsDownloadPaths.DNN_ESM2_3B_TRAIN_VALID.value,
+        "DNN ESM1b trial 4 train plus validation": ModelsDownloadPaths.DNN_ESM1b_TRAIN_VALID.value,
+        "ProtBERT trial 2 train plus validation": ModelsDownloadPaths.DNN_PROTBERT_TRAIN_VALID.value,
     }
 
     if pipeline not in pipelines:
