@@ -12,7 +12,9 @@ class ModelsDownloadPaths(Enum):
 class BLASTDownloadPaths(Enum):
 
     BLAST_ALL_DATA = "https://nextcloud.bio.di.uminho.pt/s/Wka96R8ADGqLjYT/download/BLAST_all_data.zip"
+    BLAST_TRAIN_VALID = "https://nextcloud.bio.di.uminho.pt/s/JQZjbsk6cYF7tGc/download/BLAST_train_plus_validation.zip"
 
 class BLASTDatabases(Enum):
 
     BLAST_ALL_DATA = "all_data_database"
+    BLAST_TRAIN_VALID = "train_database"

@@ -24,6 +24,13 @@ class TestBlast(unittest.TestCase):
                             output_path="test_blast_predictions.csv",
                             ids_field="id",
                             sequences_field="sequence")
+    
+    def test_predict_with_blast_train_plus_validation(self):
+        predict_with_blast(database_name="BLAST train plus validation",
+                            dataset_path="/home/jcapela/ec_numbers_prediction/data/test_data.csv",
+                            output_path="test_blast_predictions.csv",
+                            ids_field="id",
+                            sequences_field="sequence")
         
     def test_predict_with_blast_from_fasta(self):
         predict_with_blast_from_fasta(database_name="BLAST all data",

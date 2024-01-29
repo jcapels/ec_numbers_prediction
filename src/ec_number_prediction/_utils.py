@@ -252,6 +252,7 @@ def _download_blast_database_to_cache(blast_database: str) -> str:
 
     databases = {
         "BLAST all data": BLASTDownloadPaths.BLAST_ALL_DATA.value,
+        "BLAST train plus validation": BLASTDownloadPaths.BLAST_TRAIN_VALID.value,
     }
 
     if blast_database not in databases:

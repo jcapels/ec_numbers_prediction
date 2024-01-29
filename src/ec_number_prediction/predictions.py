@@ -24,6 +24,7 @@ def _make_blast_prediction(dataset_path: str, sequences_field: str,
 
     database_names = {
         "BLAST all data": BLASTDatabases.BLAST_ALL_DATA.value,
+        "BLAST train plus validation": BLASTDatabases.BLAST_TRAIN_VALID.value,
     }
 
     blast = BLAST(database_names[database_name])
