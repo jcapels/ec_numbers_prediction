@@ -180,7 +180,7 @@ Here you can see how to predict EC numbers with a model. Note that the model cho
 
 - DNN ProtBERT all data
 - DNN ESM1b all data
-- DNN ESM2 3B all data
+- DNN ESM2 3B all data - note that this model requires at least **12 GB** of RAM to be run.
 - ProtBERT trial 2 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM1b trial 4 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM2 3B trial 2 train plus validation (for this model, you need to pass all_data=False)

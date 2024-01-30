@@ -271,9 +271,13 @@ def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: s
         Results of the prediction.
     """
     pipeline.steps["place_holder"][-1].device = device
-    pipeline.steps["place_holder"][-1].model.to(device)
+    
     if "cuda" in device:
         pipeline.steps["place_holder"][-1].num_gpus = 1
+        pipeline.steps["place_holder"][-1].is_ddf = True
+    
+    if pipeline.steps["place_holder"][-1].__class__.__name__ == "ProtBert":
+        pipeline.steps["place_holder"][-1].model.to(device)
 
     pipeline.models[0].model.to(device)
     pipeline.models[0].device = device
@@ -471,6 +475,10 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
         pipeline.steps["place_holder"][-1].device = device
         if "cuda" in device:
             pipeline.steps["place_holder"][-1].num_gpus = 1
+            pipeline.steps["place_holder"][-1].is_ddf = True
+        
+        pipeline.steps["place_holder"][-1].model.to(device)
+
         pipeline.models[0].model.to(device)
         pipeline.models[0].device = device
         predictions = pipeline.predict(dataset)
