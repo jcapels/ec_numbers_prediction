@@ -6,18 +6,43 @@ from typing import Tuple, Union, List
 import numpy as np
 import pandas as pd
 from plants_sm.alignments.alignment import BLAST
-from plants_sm.data_structures.dataset import SingleInputDataset
+from plants_sm.data_structures.dataset import SingleInputDataset, Dataset
 from plants_sm.io.pickle import read_pickle
 from plants_sm.pipeline.pipeline import Pipeline
 from plants_sm.utilities.utils import convert_csv_to_fasta
 
 from ec_number_prediction import SRC_PATH
-from ec_number_prediction._utils import get_final_labels, _download_blast_database_to_cache, _download_pipeline_to_cache, convert_fasta_to_csv
+from ec_number_prediction._utils import get_final_labels, _download_blast_database_to_cache, \
+    _download_pipeline_to_cache, convert_fasta_to_csv
 from ec_number_prediction.enumerators import BLASTDatabases
 
+
 def _make_blast_prediction(dataset_path: str, sequences_field: str,
-                            ids_field: str, database_folder: str, database_name: str, 
-                            binarised=False):
+                           ids_field: str, database_folder: str, database_name: str,
+                           binarised=False) -> pd.DataFrame:
+    """
+    Make a prediction using BLAST.
+
+    Parameters
+    ----------
+    dataset_path: str
+        Path to the dataset in a csv format.
+    sequences_field: str
+        Path to the database.
+    ids_field: str
+        Field containing the ids.
+    database_folder: str
+        Folder with the database in csv and BLAST database format.
+    database_name: str
+        Name of the database.
+    binarised: bool (default: False)
+        Binarise input
+
+    Returns
+    -------
+    results: pd.DataFrame
+        Results of the prediction.
+    """
     current_directory = os.getcwd()
     os.chdir(database_folder)
     convert_csv_to_fasta(dataset_path, sequences_field, ids_field, 'temp.fasta')
@@ -67,6 +92,7 @@ def _make_blast_prediction(dataset_path: str, sequences_field: str,
     os.chdir(current_directory)
     return results
 
+
 def make_blast_prediction(dataset_path: str, sequences_field: str,
                           ids_field: str, database_folder: str, database_name: str,
                           output_path: str, binarised=False):
@@ -83,6 +109,8 @@ def make_blast_prediction(dataset_path: str, sequences_field: str,
         Field containing the ids.
     database_folder: str
         Folder with the database in csv and BLAST database format.
+    database_name: str
+        Name of the database.
     output_path: str
         Path to the output file.
     binarised: bool
@@ -91,6 +119,7 @@ def make_blast_prediction(dataset_path: str, sequences_field: str,
     results = _make_blast_prediction(dataset_path, sequences_field, ids_field, database_folder,
                                      database_name, binarised)
     results.to_csv(output_path, index=False)
+
 
 def predict_with_blast(dataset_path: str, sequences_field: str,
                        ids_field: str, database_name: str,
@@ -106,46 +135,43 @@ def predict_with_blast(dataset_path: str, sequences_field: str,
         Path to the database.
     ids_field: str
         Field containing the ids.
-    database_folder: str
-        Folder with the database in csv and BLAST database format.
+    database_name: str
+        Name of the database.
     output_path: str
         Path to the output file.
     binarised: bool
         Binarise input
     """
-    database_path =_download_blast_database_to_cache(database_name)
+    database_path = _download_blast_database_to_cache(database_name)
     make_blast_prediction(dataset_path, sequences_field, ids_field, database_path,
-                            database_name, output_path, binarised)
-    
+                          database_name, output_path, binarised)
+
+
 def predict_with_blast_from_fasta(fasta_path: str, database_name: str,
-                          output_path: str, binarised=False):
-     """
-     Make a prediction using BLAST.
-    
-     Parameters
-     ----------
-     dataset_path: str
-          Path to the dataset in a csv format.
-     sequences_field: str
-          Path to the database.
-     ids_field: str
-          Field containing the ids.
-     database_folder: str
-          Folder with the database in csv and BLAST database format.
-     output_path: str
-          Path to the output file.
-     binarised: bool
-          Binarise input
-     """
-     current_directory = os.getcwd()
-     temp_csv = os.path.join(current_directory, "temp.csv")
-     database_path =_download_blast_database_to_cache(database_name)
-     convert_fasta_to_csv(fasta_path, temp_csv)
-     try:
+                                  output_path: str, binarised=False):
+    """
+    Make a prediction using BLAST.
+
+    Parameters
+    ----------
+    fasta_path: str
+        Path to the fasta file.
+    database_name: str
+        Name of the database.
+    output_path: str
+      Path to the output file.
+    binarised: bool
+      Binarise input
+    """
+    current_directory = os.getcwd()
+    temp_csv = os.path.join(current_directory, "temp.csv")
+    database_path = _download_blast_database_to_cache(database_name)
+    convert_fasta_to_csv(fasta_path, temp_csv)
+    try:
         make_blast_prediction(temp_csv, "sequence", "id", database_path,
-                                database_name, output_path, binarised)
+                              database_name, output_path, binarised)
         os.remove(temp_csv)
-     except Exception as e:
+    except Exception as e:
         os.remove(temp_csv)
         raise Exception(e)
 
@@ -222,8 +248,28 @@ def _generate_ec_number_from_model_predictions(ECs: list) -> Tuple[list, list, l
 
     return EC1, EC2, EC3, EC4
 
-def _make_predictions_with_model(dataset, pipeline, device, all_data):
-    
+
+def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: str, all_data: bool = True) \
+        -> pd.DataFrame:
+    """
+    Make predictions with a model.
+
+    Parameters
+    ----------
+    dataset: Dataset
+        Dataset.
+    pipeline: Pipeline
+        Pipeline.
+    device: str
+        Device to use.
+    all_data: bool
+        Use all data from the dataset.
+
+    Returns
+    -------
+    results_dataframe: pd.DataFrame
+        Results of the prediction.
+    """
     pipeline.steps["place_holder"][-1].device = device
     pipeline.steps["place_holder"][-1].model.to(device)
     if "cuda" in device:
@@ -285,20 +331,63 @@ def make_predictions_with_model(pipeline_path: str, dataset_path: str, sequences
 
     results_dataframe.to_csv(output_path, index=False)
 
+
 def predict_with_model(pipeline: str, dataset_path: str, sequences_field: str,
-                          ids_field: str, output_path: str, all_data: bool = True,
-                            device: str = "cpu"):
+                       ids_field: str, output_path: str, all_data: bool = True,
+                       device: str = "cpu"):
+    """
+    Make predictions with a model.
+
+    Parameters
+    ----------
+    pipeline: str
+        Path to the pipeline.
+    dataset_path: str
+        Path to the dataset in a csv format.
+    sequences_field: str
+        Path to the database.
+    ids_field: str
+        Field containing the ids.
+    output_path: str
+        Path to the output file.
+    all_data: bool
+        Use all data from the dataset.
+    device: str
+        Device to use.
+
+    Returns
+    -------
+
+    """
     pipeline_path = _download_pipeline_to_cache(pipeline)
-    make_predictions_with_model(pipeline_path=pipeline_path, 
-                                dataset_path=dataset_path, 
-                                sequences_field=sequences_field, 
-                                ids_field=ids_field, 
-                                output_path=output_path, 
+    make_predictions_with_model(pipeline_path=pipeline_path,
+                                dataset_path=dataset_path,
+                                sequences_field=sequences_field,
+                                ids_field=ids_field,
+                                output_path=output_path,
                                 all_data=all_data, device=device)
-    
+
+
 def predict_with_model_from_fasta(pipeline: str, fasta_path: str,
-                            output_path: str, all_data: bool = True,
-                            device: str = "cpu"):   
+                                  output_path: str, all_data: bool = True,
+                                  device: str = "cpu"):
+    """
+    Make predictions with a model.
+
+    Parameters
+    ----------
+    pipeline: str
+        Path to the pipeline.
+    fasta_path: str
+        Path to the fasta file.
+    output_path: str
+        Path to the output file.
+    all_data: bool
+        Use all data from the dataset.
+    device: str
+        Device to use.
+
+    """
     current_directory = os.getcwd()
     temp_csv = os.path.join(current_directory, "temp.csv")
     convert_fasta_to_csv(fasta_path, temp_csv)
@@ -310,12 +399,25 @@ def predict_with_model_from_fasta(pipeline: str, fasta_path: str,
         raise Exception(e)
 
 
-def determine_ensemble_predictions(threshold=2, *model_predictions):
+def determine_ensemble_predictions(threshold: int = 2, *model_predictions) -> np.ndarray:
+    """
+    Determine the ensemble predictions.
+
+    Parameters
+    ----------
+    threshold: int
+        Threshold to use.
+    model_predictions: list
+        List of model predictions.
+
+    Returns
+    -------
+
+    """
     model_predictions = list(model_predictions)
 
     for i, model_prediction in enumerate(model_predictions):
         model_predictions[i] = np.array(model_prediction)
-
 
     predictions_voting = np.zeros_like(model_predictions[0])
 
@@ -332,27 +434,39 @@ def determine_ensemble_predictions(threshold=2, *model_predictions):
 
 
 def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_field: str,
-                                ids_field: str, output_path: str, blast_database, blast_database_folder_path, 
-                                all_data: bool = True,
-                                device: str = "cpu"):
+                             ids_field: str, output_path: str, blast_database, blast_database_folder_path,
+                             all_data: bool = True,
+                             device: str = "cpu"):
     """
     Make an ensemble prediction.
 
     Parameters
     ----------
+    dataset_path: str
+        Path to the dataset in a csv format.
     pipelines: List[str]
         List of paths to the pipelines.
+    sequences_field: str
+        Path to the database.
+    ids_field: str
+        Field containing the ids.
+    output_path: str
+        Path to the output file.
     blast_database: str
         Path to the BLAST database.
+    blast_database_folder_path: str
+        Path to the BLAST database folder.
     all_data: bool
         Use all data from the dataset.
+    device: str
+        Device to use.
+
     """
-    results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
     results = []
     for pipeline in pipelines:
-        
+
         dataset = SingleInputDataset.from_csv(dataset_path, representation_field=sequences_field,
-                                                                   instances_ids_field=ids_field)
+                                              instances_ids_field=ids_field)
         pipeline = Pipeline.load(pipeline)
         pipeline.steps["place_holder"][-1].device = device
         if "cuda" in device:
@@ -360,12 +474,12 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
         pipeline.models[0].model.to(device)
         pipeline.models[0].device = device
         predictions = pipeline.predict(dataset)
-        
+
         results.append(predictions)
-    
-    blast_results = _make_blast_prediction(dataset_path, sequences_field, ids_field, 
+
+    blast_results = _make_blast_prediction(dataset_path, sequences_field, ids_field,
                                            blast_database_folder_path, blast_database)
-    
+
     if all_data:
         path = os.path.join(SRC_PATH, "labels_names_all_data.pkl")
     else:
@@ -397,7 +511,7 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
                 blast_results_array[i, index] = 1
             except ValueError:
                 pass
-    
+
     determined_predictions = determine_ensemble_predictions(2, *results, blast_results_array)
     results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
     labels_names = read_pickle(path)
@@ -412,24 +526,31 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
         EC1, EC2, EC3, EC4 = _generate_ec_number_from_model_predictions(label_predictions)
         label_predictions = [";".join(EC1)] + [";".join(EC2)] + [";".join(EC3)] + [";".join(EC4)]
         results_dataframe.loc[i] = [ids[i]] + label_predictions
-    
+
     results_dataframe.to_csv(output_path, index=False)
 
+
 def predict_with_ensemble(dataset_path: str, sequences_field: str,
-                                ids_field: str, output_path: str,
-                                all_data: bool = True,
-                                device: str = "cpu"):
+                          ids_field: str, output_path: str,
+                          all_data: bool = True,
+                          device: str = "cpu"):
     """
     Make an ensemble prediction.
 
     Parameters
     ----------
-    pipelines: List[str]
-        List of paths to the pipelines.
-    blast_database: str
-        Path to the BLAST database.
+    dataset_path: str
+        Path to the dataset in a csv format.
+    sequences_field: str
+        Path to the database.
+    ids_field: str
+        Field containing the ids.
+    output_path: str
+        Path to the output file.
     all_data: bool
         Use all data from the dataset.
+    device: str
+        Device to use.
     """
     esm2_3b = _download_pipeline_to_cache("DNN ESM2 3B all data")
     prot_bert = _download_pipeline_to_cache("DNN ProtBERT all data")
@@ -437,24 +558,27 @@ def predict_with_ensemble(dataset_path: str, sequences_field: str,
     pipelines = [esm2_3b, prot_bert, esm1b]
     blast_database = "BLAST all data"
     blast_database_folder_path = _download_blast_database_to_cache(blast_database)
-    make_ensemble_prediction(dataset_path, pipelines, sequences_field, ids_field, output_path, blast_database, 
-                                blast_database_folder_path, all_data, device)
-    
+    make_ensemble_prediction(dataset_path, pipelines, sequences_field, ids_field, output_path, blast_database,
+                             blast_database_folder_path, all_data, device)
+
+
 def predict_with_ensemble_from_fasta(fasta_path: str,
-                                output_path: str,
-                                all_data: bool = True,
-                                device: str = "cpu"):
+                                     output_path: str,
+                                     all_data: bool = True,
+                                     device: str = "cpu"):
     """
     Make an ensemble prediction.
 
     Parameters
     ----------
-    pipelines: List[str]
-        List of paths to the pipelines.
-    blast_database: str
-        Path to the BLAST database.
+    fasta_path: str
+        Path to the fasta file.
+    output_path: str
+        Path to the output file.
     all_data: bool
         Use all data from the dataset.
+    device: str
+        Device to use.
     """
     current_directory = os.getcwd()
     temp_csv = os.path.join(current_directory, "temp.csv")
