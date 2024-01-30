@@ -10,6 +10,7 @@ from plants_sm.data_structures.dataset import SingleInputDataset, Dataset
 from plants_sm.io.pickle import read_pickle
 from plants_sm.pipeline.pipeline import Pipeline
 from plants_sm.utilities.utils import convert_csv_to_fasta
+import torch
 
 from ec_number_prediction import SRC_PATH
 from ec_number_prediction._utils import get_final_labels, _download_blast_database_to_cache, \
@@ -249,7 +250,8 @@ def _generate_ec_number_from_model_predictions(ECs: list) -> Tuple[list, list, l
     return EC1, EC2, EC3, EC4
 
 
-def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: str, all_data: bool = True) \
+def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: str, all_data: bool = True,
+                                 num_gpus: int = 1) \
         -> pd.DataFrame:
     """
     Make predictions with a model.
@@ -264,6 +266,8 @@ def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: s
         Device to use.
     all_data: bool
         Use all data from the dataset.
+    num_gpus: int
+        Number of GPUs to use.
 
     Returns
     -------
@@ -273,7 +277,11 @@ def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: s
     pipeline.steps["place_holder"][-1].device = device
     
     if "cuda" in device:
-        pipeline.steps["place_holder"][-1].num_gpus = 1
+        if device == "cuda":
+            pipeline.steps["place_holder"][-1].num_gpus = num_gpus
+        else:
+            pipeline.steps["place_holder"][-1].num_gpus = 1
+
         pipeline.steps["place_holder"][-1].is_ddf = True
     
     if pipeline.steps["place_holder"][-1].__class__.__name__ == "ProtBert":
@@ -306,7 +314,7 @@ def _make_predictions_with_model(dataset: Dataset, pipeline: Pipeline, device: s
 
 def make_predictions_with_model(pipeline_path: str, dataset_path: str, sequences_field: str,
                                 ids_field: str, output_path: str, all_data: bool = True,
-                                device: str = "cpu"):
+                                device: str = "cpu", num_gpus: int = 1):
     """
     Make predictions with a model.
 
@@ -326,19 +334,21 @@ def make_predictions_with_model(pipeline_path: str, dataset_path: str, sequences
         Use all data from the dataset.
     device: str
         Device to use.
+    num_gpus: int
+        Number of GPUs to use for predicting the ESM embedding.
     """
     dataset = SingleInputDataset.from_csv(dataset_path, representation_field=sequences_field,
                                           instances_ids_field=ids_field)
     pipeline = Pipeline.load(pipeline_path)
 
-    results_dataframe = _make_predictions_with_model(dataset, pipeline, device, all_data)
+    results_dataframe = _make_predictions_with_model(dataset, pipeline, device, all_data, num_gpus=num_gpus)
 
     results_dataframe.to_csv(output_path, index=False)
 
 
 def predict_with_model(pipeline: str, dataset_path: str, sequences_field: str,
                        ids_field: str, output_path: str, all_data: bool = True,
-                       device: str = "cpu"):
+                       device: str = "cpu", num_gpus: int = 1):
     """
     Make predictions with a model.
 
@@ -358,6 +368,8 @@ def predict_with_model(pipeline: str, dataset_path: str, sequences_field: str,
         Use all data from the dataset.
     device: str
         Device to use.
+    num_gpus: int
+        Number of GPUs to use for predicting the ESM embedding.
 
     Returns
     -------
@@ -369,12 +381,13 @@ def predict_with_model(pipeline: str, dataset_path: str, sequences_field: str,
                                 sequences_field=sequences_field,
                                 ids_field=ids_field,
                                 output_path=output_path,
-                                all_data=all_data, device=device)
+                                all_data=all_data, device=device,
+                                num_gpus=num_gpus)
 
 
 def predict_with_model_from_fasta(pipeline: str, fasta_path: str,
                                   output_path: str, all_data: bool = True,
-                                  device: str = "cpu"):
+                                  device: str = "cpu", num_gpus: int = 1):
     """
     Make predictions with a model.
 
@@ -390,13 +403,15 @@ def predict_with_model_from_fasta(pipeline: str, fasta_path: str,
         Use all data from the dataset.
     device: str
         Device to use.
+    num_gpus: int
+        Number of GPUs to use for predicting the ESM embedding.
 
     """
     current_directory = os.getcwd()
     temp_csv = os.path.join(current_directory, "temp.csv")
     convert_fasta_to_csv(fasta_path, temp_csv)
     try:
-        predict_with_model(pipeline, temp_csv, "sequence", "id", output_path, all_data, device)
+        predict_with_model(pipeline, temp_csv, "sequence", "id", output_path, all_data, device, num_gpus)
         os.remove(temp_csv)
     except Exception as e:
         os.remove(temp_csv)
@@ -440,7 +455,7 @@ def determine_ensemble_predictions(threshold: int = 2, *model_predictions) -> np
 def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_field: str,
                              ids_field: str, output_path: str, blast_database, blast_database_folder_path,
                              all_data: bool = True,
-                             device: str = "cpu"):
+                             device: str = "cpu", num_gpus: int = 1):
     """
     Make an ensemble prediction.
 
@@ -464,6 +479,8 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
         Use all data from the dataset.
     device: str
         Device to use.
+    num_gpus: int
+        Number of GPUs to use for predicting the ESM embedding.
 
     """
     results = []
@@ -474,11 +491,16 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
         pipeline = Pipeline.load(pipeline)
         pipeline.steps["place_holder"][-1].device = device
         if "cuda" in device:
-            pipeline.steps["place_holder"][-1].num_gpus = 1
-            pipeline.steps["place_holder"][-1].is_ddf = True
-        
-        pipeline.steps["place_holder"][-1].model.to(device)
+            if device == "cuda":
+                pipeline.steps["place_holder"][-1].num_gpus = num_gpus
+            else:
+                pipeline.steps["place_holder"][-1].num_gpus = 1
 
+            pipeline.steps["place_holder"][-1].is_ddf = True
+    
+        if pipeline.steps["place_holder"][-1].__class__.__name__ == "ProtBert":
+            pipeline.steps["place_holder"][-1].model.to(device)
+        
         pipeline.models[0].model.to(device)
         pipeline.models[0].device = device
         predictions = pipeline.predict(dataset)
@@ -541,7 +563,8 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
 def predict_with_ensemble(dataset_path: str, sequences_field: str,
                           ids_field: str, output_path: str,
                           all_data: bool = True,
-                          device: str = "cpu"):
+                          device: str = "cpu",
+                          num_gpus: int = 1):
     """
     Make an ensemble prediction.
 
@@ -559,6 +582,8 @@ def predict_with_ensemble(dataset_path: str, sequences_field: str,
         Use all data from the dataset.
     device: str
         Device to use.
+    num_gpus: int
+        Number of GPUs to use for predicting the ESM embedding.
     """
     esm2_3b = _download_pipeline_to_cache("DNN ESM2 3B all data")
     prot_bert = _download_pipeline_to_cache("DNN ProtBERT all data")
@@ -567,13 +592,14 @@ def predict_with_ensemble(dataset_path: str, sequences_field: str,
     blast_database = "BLAST all data"
     blast_database_folder_path = _download_blast_database_to_cache(blast_database)
     make_ensemble_prediction(dataset_path, pipelines, sequences_field, ids_field, output_path, blast_database,
-                             blast_database_folder_path, all_data, device)
+                             blast_database_folder_path, all_data, device, num_gpus)
 
 
 def predict_with_ensemble_from_fasta(fasta_path: str,
                                      output_path: str,
                                      all_data: bool = True,
-                                     device: str = "cpu"):
+                                     device: str = "cpu", 
+                                     num_gpus: int = 1):
     """
     Make an ensemble prediction.
 
@@ -587,12 +613,14 @@ def predict_with_ensemble_from_fasta(fasta_path: str,
         Use all data from the dataset.
     device: str
         Device to use.
+    num_gpus: int
+        Number of GPUs to use for predicting the ESM embedding.
     """
     current_directory = os.getcwd()
     temp_csv = os.path.join(current_directory, "temp.csv")
     convert_fasta_to_csv(fasta_path, temp_csv)
     try:
-        predict_with_ensemble(temp_csv, "sequence", "id", output_path, all_data, device)
+        predict_with_ensemble(temp_csv, "sequence", "id", output_path, all_data, device, num_gpus)
         os.remove(temp_csv)
     except Exception as e:
         os.remove(temp_csv)

@@ -16,6 +16,14 @@ class TestESM1b(TestCase):
                                     output_path="predictions_esm1b.csv",
                                     device="cuda:3")
 
+    def test_pipeline_prediction_esm1b_from_cache_folder(self):
+        predict_with_model(pipeline="DNN ESM1b all data",
+                           dataset_path="/home/jcapela/ec_numbers_prediction/data/test_data.csv",
+                           output_path="predictions_esm1b.csv",
+                           ids_field="id",
+                           sequences_field="sequence",
+                           device="cuda", num_gpus=3)
+
     def test_pipeline_prediction_esm1b_no_all_data(self):
         make_predictions_with_model(pipeline_path="/home/jcapela/ec_numbers_prediction"
                                                   "/models/DNN_ESM1b_trial_4_train_plus_validation",

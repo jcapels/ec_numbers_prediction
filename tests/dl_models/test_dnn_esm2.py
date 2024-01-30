@@ -15,6 +15,7 @@ class TestESM2(TestCase):
                                     dataset_path="/home/jcapela/ec_numbers_prediction/data/test_data.csv",
                                     output_path="predictions_esm2_3b.csv",
                                     device="cpu")
+        
     def test_dnn_esm2_3b_prediction_all_data_from_cache_folder(self):
         import tracemalloc
         tracemalloc.start()
@@ -24,7 +25,7 @@ class TestESM2(TestCase):
                             output_path="predictions_esm2_3b.csv",
                             ids_field="id",
                             sequences_field="sequence",
-                            device="cuda:1")
+                            device="cuda", num_gpus=2)
         end = time.time()
         print("Time spent: ", end - start)
         print("Memory needed: ", tracemalloc.get_traced_memory())
