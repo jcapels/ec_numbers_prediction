@@ -24,7 +24,7 @@
 
 ## Requirements
 - Python >= 3.9
-- BLAST >= 2.11.0
+- BLAST >= 2.12.0
 
 ## Installation
 
