@@ -1,6 +1,6 @@
 from unittest import TestCase
-from ec_number_prediction.predictions import make_ensemble_prediction, make_predictions_with_model, predict_with_ensemble, predict_with_ensemble_from_fasta, \
-    predict_with_model, predict_with_model_from_fasta
+from ec_number_prediction.predictions import make_predictions_with_model, predict_with_model, predict_with_model_from_fasta
+    
 
 class TestProtBERT(TestCase):
 
