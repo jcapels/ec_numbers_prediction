@@ -8,8 +8,8 @@ from hurry.filesize import size
 
 def benchmark_resources(cuda):
     pipelines = ["DNN ProtBERT all data", "DNN ESM1b all data", "DNN ESM2 3B all data", "BLAST all data", "Ensemble"]
-    pipelines = ["BLAST all data", "Ensemble"]
-    datasets = [(25, "test_25.fasta"), (100, "test_100.fasta")]
+    datasets = [(25, "test_25.fasta"), (100, "test_100.fasta"), (1000, "test_1000.fasta"), 
+                (10000, "test_10000.fasta"), (100000, "test_100000.fasta")]
     results = pd.DataFrame(columns=["pipeline", "dataset", "time", "memory"])
     for pipeline in pipelines:
         for dataset in datasets:
@@ -43,10 +43,15 @@ def benchmark_resources(cuda):
             end = time.time()
             print("Time spent: ", end - start)
             print("Memory needed: ", tracemalloc.get_traced_memory())
-            results = pd.concat((results, pd.DataFrame({"pipeline": [pipeline], "dataset": [dataset[0]], "time": [str(datetime.timedelta(seconds=end - start))], 
-                                      "memory": [size(int(tracemalloc.get_traced_memory()[1]))]})), ignore_index=True, axis=0)
+            results = pd.concat((results, 
+                                    pd.DataFrame({"pipeline": [pipeline], 
+                                                  "dataset": [dataset[0]], 
+                                                  "time": [str(datetime.timedelta(seconds=end - start))], 
+                                                  "memory": [size(int(tracemalloc.get_traced_memory()[1]))]})), 
+                                                  ignore_index=True, axis=0)
             tracemalloc.stop()
-    results.to_csv("benchmark_results.csv", index=False)
+
+            results.to_csv("benchmark_results.csv", index=False)
             
 if __name__ == "__main__":
     benchmark_resources(cuda=True)

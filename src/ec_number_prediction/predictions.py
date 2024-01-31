@@ -74,12 +74,14 @@ def _make_blast_prediction(dataset_path: str, sequences_field: str,
     not_in_results = dataset[~dataset_ids.isin(results_ids)]
     not_in_results.drop([sequences_field], axis=1, inplace=True)
 
-    for column in results.columns:
-        if column != "qseqid":
-            not_in_results.loc[:, column] = 0.0
+    if not_in_results.shape[0] > 0:
+        for column in results.columns:
+            if column != "qseqid":
+                not_in_results.loc[:, column] = 0.0
 
-    not_in_results.columns = results.columns
-    results = pd.concat([results, not_in_results])
+        not_in_results.columns = results.columns
+        results = pd.concat([results, not_in_results])
+        
     results.drop_duplicates(subset=["qseqid"], inplace=True)
     # Create a new column with the custom order as a categorical type
     results['CustomOrder'] = pd.Categorical(results['qseqid'], categories=dataset[ids_field], ordered=True)
