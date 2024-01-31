@@ -15,24 +15,7 @@ oxo group of donors), (3) the sub-subclass (such as With NAD(+) or NADP(+) as ac
 and (4) the final level, which identifies the enzyme's substrate (for example, 1.2.1.3:
 aldehyde dehydrogenase (NAD(+))).
 
-### Table of contents:
 
-- [Requirements](#requirements)
-- [Installation](#installation)
-    - [Pip](#pip)
-    - [From github](#From-github)
-- [Run pipeline to obtain the data](#Run-pipeline-to-obtain-the-data)
-- [Extract features](#extract-features)
-- [Train models](#Train-models)
-  - [Train baselines](#Train-baselines)
-  - [Train models](#Train-models)
-  - [Train models with both training and validation sets](#Train-models-with-both-training-and-validation-sets)
-  - [Train models with the whole data](#Train-models-with-the-whole-data)
-- [Predict EC numbers](#predict-ec-numbers)
-  - [Predict with model](#predict-with-model)
-  - [Predict with BLAST](#predict-with-blast)
-  - [Predict with an ensemble of BLAST and DL models](#predict-with-an-ensemble-of-blast-and-dl-models)
-- [Post analysis - generate results and plots](#post-analysis---generate-results-and-plots)
 
 ## Requirements
 - Python >= 3.9
@@ -51,7 +34,7 @@ conda install bioconda::blast==2.12.0
 ### Pip
 
 ```bash
-pip install ec_numbers_prediction
+pip install ec-numbers-prediction
 ```
 
 ### From github
@@ -327,41 +310,3 @@ predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction
                         output_path="predictions_ensemble.csv",
                         device="cuda:3")
 ```
-
-## Post analysis - generate results and plots
-
-Here you can see how to perform the post analysis of the predictions.
-
-We made use of the notebooks present in the [notebooks folder](notebooks/). 
-
-Here is an explanation of each notebook:
-
-- **[0.1-make_predictions_for_all_models.ipynb](notebooks/0.1-make_predictions_for_all_models.ipynb)**: this notebook contains the code to generate the
-predictions for the test set of all models and save them in pickle files.
-- **[0.2-test_ensembles/0.2-test_ensembles.ipynb](notebooks/0.2-test_ensembles/0.2-test_ensembles.ipynb)**: this notebook contains the code to generate the
-predictions and evaluate the performance results of the ensemble of BLAST and DL models.
-- **[1-general_results.ipynb](notebooks/1-general_results.ipynb)**: this notebook contains the code to generate the
-general results the plots for the performance results of the models. 
-- **[2-identity_intervals/](notebooks/2-identity_intervals/2-analyse_results_for_identity_intervals.ipynb)**: this notebook contains the code to generate
-the plots for the performance results of the models for each identity interval.
-- **[3-test_hierarchical_prediction/3-test_consistency_predictions.ipynb](notebooks/3-test_hierarchical_prediction/3-test_consistent_predictions.ipynb)**: this notebook contains the code to generate 
-the plots for the Hierarchical Consistency Error (HCE) of the predictions of the models.
-- **[4-test_models_for_other_datasets/](notebooks/4-test_models_for_other_datasets/)**: this folder contains the code to generate 
-predictions and the plots for the performance results of the models for **evidence-level and promiscuous enzymes** datasets.
-  - **[4-test_models_for_other_datasets/4.1-test_evidence_based.ipynb](notebooks/4-test_models_for_other_datasets/4.1-test_evidence_based.ipynb)**: this notebook contains the code to generate
-    predictions and the plots for the performance results of the models for the evidence-level dataset.
-  - **[4-test_models_for_other_datasets/4.2-test_promiscuous.ipynb](notebooks/4-test_models_for_other_datasets/4.2-test_promiscuous.ipynb)**: this notebook contains the code to generate
-    predictions and the plots for the performance results of the models for the promiscuous dataset.
-- **[5-differences_blast_and_dl_models/](notebooks/5-differences_blast_and_dl_models/)**: this folder contains the code to generate
-the plots for the differences between BLAST and DL models.
-  - **[5-differences_blast_and_dl_models/5.1-differences_blast_and_dl_models.ipynb](notebooks/5-differences_blast_and_dl_models/5.1-differences_blast_and_dl_models.ipynb)**: this notebook contains the code to generate
-    the predictions and evaluate the performance results of the models for the whole dataset.
-  - **[5-differences_blast_and_dl_models/5.2-analysis_on_specific_ec_numbers.ipynb](notebooks/5-differences_blast_and_dl_models/5.2-analysis_on_specific_ec_numbers.ipynb)**: this notebook contains the code to generate
-    the predictions and evaluate the performance results of the models for specific EC numbers.
-- **[6-analysis_for_benchmarks/](notebooks/6-analysis_for_benchmarks/)**: this notebook contains the code to generate
-the plots for the performance results of the models for the **halogenases and Price et al** datasets.
-  - **[6.1-analysis_for_benchmarks/6.1-test_for_halogenases.ipynb](notebooks/6-analysis_for_benchmarks/6.1-test_for_halogenases.ipynb)**: this notebook contains the code to generate
-    the predictions and evaluate the performance results of the models for the halogenases dataset.
-  - **[6.2-analysis_for_benchmarks/6.2-test_for_price_et_al.ipynb](notebooks/6-analysis_for_benchmarks/6.2-test_for_price_et_al.ipynb)**: this notebook contains the code to generate
-    the predictions and evaluate the performance results of the models for the Price et al dataset.
-

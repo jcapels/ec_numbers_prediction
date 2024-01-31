@@ -2,4 +2,3 @@ plants-sm==0.0.1
 luigi
 scikit-multilearn
 matplotlib-venn
-

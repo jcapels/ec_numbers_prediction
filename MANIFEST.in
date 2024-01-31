@@ -1,0 +1,2 @@
+include src/ec_number_prediction/labels_names.pkl
+include src/ec_number_prediction/labels_names_all_data.pkl
