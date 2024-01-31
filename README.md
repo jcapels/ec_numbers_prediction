@@ -2,6 +2,20 @@
 
 ### Description
 
+Enzyme Commission (EC) numbers serve as a hierarchical system that categorizes 
+and organizes enzyme activities. 
+Within the realm of genome annotation, EC numbers are attributed to protein sequences 
+to concisely represent specific chemical reaction patterns. 
+These patterns mirror the chemical transformations enabled by the enzymes associated 
+with their respective EC numbers. The structure of EC numbers is divided 
+into four levels: (1) the primary category (e.g., 1 for oxidoreductases, 
+2 for transferases, 3 for hydrolases, 4 for lyases, 5 for isomerases, 6 for ligases, 
+and 7 for translocases), (2) the subclass (for instance, 1.2: Targets the aldehyde or 
+oxo group of donors), (3) the sub-subclass (such as With NAD(+) or NADP(+) as acceptor), 
+and (4) the final level, which identifies the enzyme's substrate (for example, 1.2.1.3:
+aldehyde dehydrogenase (NAD(+))).
+
+
 
 ### Table of contents:
 
@@ -26,6 +40,14 @@
 - Python >= 3.9
 - BLAST >= 2.12.0
 
+## Install with conda
+    
+```bash
+conda create -n ec_numbers_prediction python=3.9
+conda activate ec_numbers_prediction
+conda install bioconda::blast==2.12.0
+```
+
 ## Installation
 
 ### Pip
@@ -35,7 +57,6 @@ Under construction
 ### From github
 
 ```bash
-pip install git+https://github.com/jcapels/PlantsSM.git
 pip install git+https://github.com/jcapels/ec_numbers_prediction.git
 ```
 
@@ -180,10 +201,29 @@ Here you can see how to predict EC numbers with a model. Note that the model cho
 
 - DNN ProtBERT all data
 - DNN ESM1b all data
-- DNN ESM2 3B all data - note that this model requires at least **12 GB** of RAM to be run.
+- DNN ESM2 3B all data - note that this model requires at least **12 GB** of RAM to be run. If you intend to use GPU to 
+make the predictions, you need to have at least **20 GB** of GPU memory or 4 GPUs with **8 GB**.
 - ProtBERT trial 2 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM1b trial 4 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM2 3B trial 2 train plus validation (for this model, you need to pass all_data=False)
+
+Here you can see the time taken and memory usage for each model to predict for different number of data points:
+
+| Model           | Data Points | Time Taken | Memory Usage |
+|-----------------|-------------|---------|--------------|
+| DNN ProtBERT    | 25          | 0:00:05 | 1G           |
+| DNN ProtBERT    | 100         | 0:00:08 | 1G           |
+| DNN ProtBERT    | 1000        | 0:00:56 | 1G           |
+| DNN ProtBERT    | 10000       | 0:09:00 | 1G           |
+| DNN ProtBERT    | 100000      | 1:55:08 | 7G           |
+| DNN ESM1b       | 25          | 0:00:28 | 2G           |
+| DNN ESM1b       | 100         | 0:00:40 | 2G           |
+| DNN ESM1b       | 1000        | 0:02:22 | 2G           |
+| DNN ESM1b       | 10000       | 0:19:22 | 2G           |
+| DNN ESM1b       | 100000      | 3:35:04 | 7G           |
+| DNN ESM2 3B     | 25          | 0:01:35 | 10G          |
+| DNN ESM2 3B     | 100         | 0:03:40 | 10G          |
+| DNN ESM2 3B     | 1000        | 0:28:27 | 10G          |
 
 The parameters of the function are the following:
 - **pipeline**: name of the model to use.

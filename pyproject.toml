@@ -7,9 +7,9 @@ addopts = "--cov=ec_number_prediction"
 pythonpath = [
   ".", "src"
 ]
-#testpaths = [
-#    "tests"
-#]
+testpaths = [
+    "tests"
+]
 
 [tool.mypy]
 mypy_path = "src"

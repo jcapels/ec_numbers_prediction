@@ -1,5 +1,5 @@
-plants_sm @ git+https://github.com/jcapels/PlantsSM.git
+plants-sm==0.0.1
 luigi
 scikit-multilearn
-matplotlib_venn
+matplotlib-venn
 
