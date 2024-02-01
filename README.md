@@ -51,6 +51,12 @@ over traditional alignment-based methods for predicting protein functions.
 ```bash
 conda create -n ec_numbers_prediction python=3.9
 conda activate ec_numbers_prediction
+
+# Make sure you add these channels to your conda configuration
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+
 conda install bioconda::blast==2.12.0
 ```
 
