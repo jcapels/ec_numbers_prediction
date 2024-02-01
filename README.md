@@ -15,6 +15,13 @@ oxo group of donors), (3) the sub-subclass (such as With NAD(+) or NADP(+) as ac
 and (4) the final level, which identifies the enzyme's substrate (for example, 1.2.1.3:
 aldehyde dehydrogenase (NAD(+))).
 
+We have developed a robust framework for evaluating deep learning (DL) models dedicated 
+to EC number prediction. These models are trained using embeddings from ESM2, ESM1b, and 
+ProtBERT. Through this detailed method, our objective is to thoroughly examine the efficacy
+of both BLASTp and DL models. This will enable us to provide insightful observations on the
+superiority of DL models, augmented with the latest large language model (LLM) embeddings, 
+over traditional alignment-based methods for predicting protein functions.
+
 ### Table of contents:
 
 - [Requirements](#requirements)
@@ -32,6 +39,7 @@ aldehyde dehydrogenase (NAD(+))).
   - [Predict with model](#predict-with-model)
   - [Predict with BLAST](#predict-with-blast)
   - [Predict with an ensemble of BLAST and DL models](#predict-with-an-ensemble-of-blast-and-dl-models)
+- [Data availability](#data-availability)
 - [Post analysis - generate results and plots](#post-analysis---generate-results-and-plots)
 
 ## Requirements
@@ -224,6 +232,8 @@ Here you can see the time taken and memory usage for each model to predict for d
 | DNN ESM2 3B     | 25          | 0:01:35 | 10G          |
 | DNN ESM2 3B     | 100         | 0:03:40 | 10G          |
 | DNN ESM2 3B     | 1000        | 0:28:27 | 10G          |
+| DNN ESM2 3B     | 10000       | 4:33:50 | 10G          |
+ 
 
 The parameters of the function are the following:
 - **pipeline**: name of the model to use.
@@ -315,7 +325,7 @@ predict_with_ensemble(dataset_path="/home/jcapela/ec_numbers_prediction/data/tes
                         output_path="predictions_ensemble.csv",
                         ids_field="id",
                         sequences_field="sequence",
-                        device="cuda:3")
+                        device="cuda:0")
 ```
 
 You can also make predictions using a FASTA file:
@@ -325,14 +335,25 @@ from ec_number_prediction.predictions import predict_with_ensemble_from_fasta
 
 predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction/data/test_data.fasta",
                         output_path="predictions_ensemble.csv",
-                        device="cuda:3")
+                        device="cuda:0")
 ```
+
+## Data availability
+
+Here you can see how to obtain the data used in the project: https://nextcloud.bio.di.uminho.pt/s/X9cYxappMpgGABn.
+In this link, you can find the following folders:
+
+- **data** - this folder contains the data used in the project - the data splits are here too.
+- **models** - this folder contains the models used in the project.
+- **predictions** - this folder contains the predictions made in the project.
+- **features** - this folder contains the features for the test sets.
+- **f1_scores** - this folder contains the F1 scores for the test sets.
 
 ## Post analysis - generate results and plots
 
 Here you can see how to perform the post analysis of the predictions.
 
-We made use of the notebooks present in the [notebooks folder](notebooks/). 
+We made use of the notebooks present in the [notebooks folder](notebooks/).
 
 Here is an explanation of each notebook:
 

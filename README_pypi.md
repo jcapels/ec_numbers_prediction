@@ -15,6 +15,13 @@ oxo group of donors), (3) the sub-subclass (such as With NAD(+) or NADP(+) as ac
 and (4) the final level, which identifies the enzyme's substrate (for example, 1.2.1.3:
 aldehyde dehydrogenase (NAD(+))).
 
+We have developed a robust framework for evaluating deep learning (DL) models dedicated 
+to EC number prediction. These models are trained using embeddings from ESM2, ESM1b, and 
+ProtBERT. Through this detailed method, our objective is to thoroughly examine the efficacy
+of both BLASTp and DL models. This will enable us to provide insightful observations on the
+superiority of DL models, augmented with the latest large language model (LLM) embeddings, 
+over traditional alignment-based methods for predicting protein functions.
+
 
 
 ## Requirements
