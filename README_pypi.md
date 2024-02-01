@@ -146,7 +146,7 @@ esm2_t33_650M_UR50D, but you can choose any of the models:
 - esm2_t6_8M_UR50D
 - esm2_t36_3B_UR50D
 - prot_bert_vectors
-- esm2_t48_15B_UR50D (it requires GPUs with more than 25GB of memory)
+- esm2_t48_15B_UR50D
 
 ```python
 from ec_number_prediction.train_models.optimize_dnn import train_dnn_optimization
@@ -214,6 +214,7 @@ Here you can see the time taken and memory usage for each model to predict for d
 | DNN ESM2 3B     | 25          | 0:01:35 | 10G          |
 | DNN ESM2 3B     | 100         | 0:03:40 | 10G          |
 | DNN ESM2 3B     | 1000        | 0:28:27 | 10G          |
+| DNN ESM2 3B     | 10000       | 4:33:50 | 10G          |
 
 The parameters of the function are the following:
 - **pipeline**: name of the model to use.

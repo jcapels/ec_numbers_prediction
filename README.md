@@ -164,7 +164,7 @@ esm2_t33_650M_UR50D, but you can choose any of the models:
 - esm2_t6_8M_UR50D
 - esm2_t36_3B_UR50D
 - prot_bert_vectors
-- esm2_t48_15B_UR50D (it requires GPUs with more than 25GB of memory)
+- esm2_t48_15B_UR50D
 
 ```python
 from ec_number_prediction.train_models.optimize_dnn import train_dnn_optimization
