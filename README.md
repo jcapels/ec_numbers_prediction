@@ -46,7 +46,7 @@ over traditional alignment-based methods for predicting protein functions.
 - Python >= 3.9
 - BLAST >= 2.12.0
 
-## Install with conda
+## Create conda environment
     
 ```bash
 conda create -n ec_numbers_prediction python=3.9
@@ -59,7 +59,7 @@ conda install bioconda::blast==2.12.0
 ### Pip
 
 ```bash
-pip install ec_numbers_prediction
+pip install ec-number-prediction
 ```
 
 ### From github
