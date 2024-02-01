@@ -254,8 +254,39 @@ predict_with_model(pipeline="DNN ProtBERT all data",
                     ids_field="id",
                     all_data=True,
                     sequences_field="sequence",
-                    device="cuda:1")
+                    device="cuda:0")
 ```
+
+If don't have large enough GPU memory, you can use the following models but have at least 4 GPU with 10 GB of memory:
+
+```python
+from ec_number_prediction.predictions import predict_with_model
+
+
+predict_with_model(pipeline="DNN ESM2 3B all data",
+                    dataset_path="/home/jcapela/ec_numbers_prediction/data/test_data.csv",
+                    output_path="predictions_prot_bert.csv",
+                    ids_field="id",
+                    all_data=True,
+                    sequences_field="sequence",
+                    device="cuda", num_gpus=4)
+```
+
+If you don't have a GPU, you can use the CPU:
+
+```python
+from ec_number_prediction.predictions import predict_with_model
+
+predict_with_model(pipeline="DNN ProtBERT all data",
+                    dataset_path="/home/jcapela/ec_numbers_prediction/data/test_data.csv",
+                    output_path="predictions_prot_bert.csv",
+                    ids_field="id",
+                    all_data=True,
+                    sequences_field="sequence",
+                    device="cpu")
+```
+
+
 
 You can also make predictions using a FASTA file:
 
@@ -266,7 +297,7 @@ predict_with_model_from_fasta(pipeline="DNN ProtBERT all data",
                     fasta_path="/home/jcapela/ec_numbers_prediction/data/test_data.fasta",
                     output_path="predictions_prot_bert.csv",
                     all_data=True,
-                    device="cuda:1")
+                    device="cuda:0")
 ```
 
 ### Predict with BLAST
