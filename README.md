@@ -239,12 +239,12 @@ Here you can see the time taken and memory usage for each model to predict for d
 | DNN ESM2 3B     | 100         | 0:03:40 | 10G          |
 | DNN ESM2 3B     | 1000        | 0:28:27 | 10G          |
 | DNN ESM2 3B     | 10000       | 4:33:50 | 10G          |
-| DNN ESM2 3B all data | 100000 | 1 day, 22:10:43 | 10G  |
-| BLAST all data | 25 | 0:01:37 | 264M |
-| BLAST all data | 100 | 0:07:29 | 264M |
-| BLAST all data | 1000 | 0:48:55 | 264M | 
-| BLAST all data | 10000 | 8:20:03 | 266M |
-| BLAST all data | 100000 | 2 days, 20:03:17.393101 | 351M |
+| DNN ESM2 3B | 100000 | 1 day, 22:10:43 | 10G  |
+| BLAST | 25 | 0:01:37 | 264M |
+| BLAST | 100 | 0:07:29 | 264M |
+| BLAST | 1000 | 0:48:55 | 264M | 
+| BLAST | 10000 | 8:20:03 | 266M |
+| BLAST | 100000 | 2 days, 20:03:17.393101 | 351M |
  
 
 The parameters of the function are the following:
