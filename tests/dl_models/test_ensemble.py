@@ -73,8 +73,8 @@ class TestPipelines(unittest.TestCase):
                                         device="cpu")
         
     def test_predict_with_ensemble_from_fasta(self):
-        predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction/data/test.fasta",
+        predict_with_ensemble_from_fasta(fasta_path="/home/joao/Desktop/PHD/ec_numbers_prediction/data/protein.faa",
                             output_path="predictions_ensemble.csv",
-                            device="cuda:3")
+                            device="cuda:0")
         
         
