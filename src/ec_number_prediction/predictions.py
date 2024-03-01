@@ -521,10 +521,10 @@ def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_
 
     blast_results_array = np.zeros((len(blast_results), len(labels_names)))
     for i, row in blast_results.iterrows():
-        EC1 = row["EC1"]
-        EC2 = row["EC2"]
-        EC3 = row["EC3"]
-        EC4 = row["EC4"]
+        EC1 = str(row["EC1"])
+        EC2 = str(row["EC2"])
+        EC3 = str(row["EC3"])
+        EC4 = str(row["EC4"])
         if isinstance(EC1, float):
             EC1 = ""
         if isinstance(EC2, float):
