@@ -230,16 +230,16 @@ Here you can see the time taken and memory usage for each model to predict for d
 | DNN ProtBERT    | 1000        | 0:00:56 | 1G           |
 | DNN ProtBERT    | 10000       | 0:09:00 | 1G           |
 | DNN ProtBERT    | 100000      | 1:55:08 | 7G           |
-| DNN ESM1b       | 25          | 0:00:28 | 2G           |
-| DNN ESM1b       | 100         | 0:00:40 | 2G           |
-| DNN ESM1b       | 1000        | 0:02:22 | 2G           |
-| DNN ESM1b       | 10000       | 0:19:22 | 2G           |
-| DNN ESM1b       | 100000      | 3:35:04 | 7G           |
-| DNN ESM2 3B     | 25          | 0:01:35 | 10G          |
-| DNN ESM2 3B     | 100         | 0:03:40 | 10G          |
-| DNN ESM2 3B     | 1000        | 0:28:27 | 10G          |
-| DNN ESM2 3B     | 10000       | 4:33:50 | 10G          |
-| DNN ESM2 3B | 100000 | 1 day, 22:10:43 | 10G  |
+| DNN ESM1b       | 25          | 0:00:28 | 10G           |
+| DNN ESM1b       | 100         | 0:00:40 | 10G           |
+| DNN ESM1b       | 1000        | 0:02:22 | 10G           |
+| DNN ESM1b       | 10000       | 0:19:22 | 10G           |
+| DNN ESM1b       | 100000      | 3:35:04 | 10G           |
+| DNN ESM2 3B     | 25          | 0:01:35 | 25G          |
+| DNN ESM2 3B     | 100         | 0:03:40 | 25G          |
+| DNN ESM2 3B     | 1000        | 0:28:27 | 25G          |
+| DNN ESM2 3B     | 10000       | 4:33:50 | 25G          |
+| DNN ESM2 3B | 100000 | 1 day, 22:10:43 | 25G  |
 | BLAST | 25 | 0:01:37 | 264M |
 | BLAST | 100 | 0:07:29 | 264M |
 | BLAST | 1000 | 0:48:55 | 264M | 
