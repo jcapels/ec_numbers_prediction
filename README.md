@@ -148,6 +148,12 @@ generate_one_hot_encodings(save_folder="/home/working_dir", dataset_directory="/
 
 Training the baselines is also easy:
 
+### Models' implementation
+
+- DNN - [Fully connected neural network](https://github.com/jcapels/PlantsSM/blob/v0.0.2/src/plants_sm/models/fc/fc.py)
+- DeepEC CNN3 - [CNN](https://github.com/jcapels/PlantsSM/blob/v0.0.2/src/plants_sm/models/ec_number_prediction/deepec.py)
+- D-SPACE EC - [CNN](https://github.com/jcapels/PlantsSM/blob/v0.0.2/src/plants_sm/models/ec_number_prediction/d_space.py)
+
 ### Train baselines
 
 ```python
@@ -215,8 +221,8 @@ Here you can see how to predict EC numbers with a model. Note that the model cho
 
 - DNN ProtBERT all data
 - DNN ESM1b all data
-- DNN ESM2 3B all data - note that this model requires at least **12 GB** of RAM to be run. If you intend to use GPU to 
-make the predictions, you need to have at least **20 GB** of GPU memory or 4 GPUs with **8 GB**.
+- DNN ESM2 3B all data - note that this model requires at least **25 GB** of RAM to be run. If you intend to use GPU to 
+make the predictions, you need to have at least **25 GB** of CPU memory or 4 GPUs with **8 GB** each.
 - ProtBERT trial 2 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM1b trial 4 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM2 3B trial 2 train plus validation (for this model, you need to pass all_data=False)
@@ -351,7 +357,7 @@ predict_with_blast_from_fasta(database_name="BLAST all data",
 
 ### Predict with an ensemble of BLAST and DL models
 
-Here you can see how to predict EC numbers with an ensemble between BLAST and models.
+Here you can see how to predict EC numbers with an ensemble between BLAST and models. **The ensemble requires over 25 GB of RAM.**
 
 The parameters of the function are the following:
 

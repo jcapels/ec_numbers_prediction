@@ -1,3 +1,5 @@
+import time
+import tracemalloc
 import unittest
 
 from ec_number_prediction.predictions import make_ensemble_prediction, make_predictions_with_model, predict_with_ensemble, predict_with_ensemble_from_fasta, \
@@ -73,8 +75,23 @@ class TestPipelines(unittest.TestCase):
                                         device="cpu")
         
     def test_predict_with_ensemble_from_fasta(self):
-        predict_with_ensemble_from_fasta(fasta_path="/home/joao/Desktop/PHD/ec_numbers_prediction/data/protein.faa",
-                            output_path="predictions_ensemble.csv",
-                            device="cuda:0")
+
+        from hurry.filesize import size
+
+        tracemalloc.start()
+        start = time.time()
+
+        predict_with_model_from_fasta(pipeline="DNN ESM2 3B all data",
+                            fasta_path="/home/jcapela/ec_numbers_prediction/data/protein.faa",
+                            output_path="predictions_esm2_3b.csv",
+                            device="cpu")
+        
+        # predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction/data/protein.faa",
+        #                     output_path="predictions_ensemble.csv",
+        #                     device="cuda:0")
+
+        end = time.time()
+        print("Time: ", end - start)
+        print(f"Peak was {size(int(tracemalloc.get_traced_memory()[1]))}")
         
         
