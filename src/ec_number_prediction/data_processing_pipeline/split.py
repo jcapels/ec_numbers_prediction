@@ -1,6 +1,7 @@
 from logging import Logger
 import logging
 import os
+from typing import Any, Tuple
 import luigi
 import numpy as np
 import pandas as pd
@@ -31,7 +32,28 @@ class StratifiedSplit(luigi.Task):
                 luigi.LocalTarget('splits/after_split_dataset_stats_final.html')
                 ]
     
-    def apply_stratification_sklearn(self, X, y, test_size=0.15, train_size=0.85):
+    def apply_stratification_sklearn(self, X: np.ndarray, y: np.ndarray, test_size: float = 0.15, train_size: float = 0.85) -> Tuple[np.ndarray,
+                                                                                                                                     np.ndarray,
+                                                                                                                                     np.ndarray,
+                                                                                                                                     np.ndarray]:
+        """
+        Parameters
+        ----------
+        X : np.ndarray
+            Samples
+        y : np.ndarray
+            Labels
+        test_size : float, optional
+            Size of the test set, by default 0.15
+        train_size : float, optional
+            Size of the train set, by default 0.85
+        
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+            X_train, y_train, X_test, y_test
+        """
+
         
         stratifier = IterativeStratification(n_splits=2, order=2, sample_distribution_per_fold=[test_size, train_size])
         train_indexes, test_indexes = next(stratifier.split(X, y))
@@ -43,7 +65,31 @@ class StratifiedSplit(luigi.Task):
 
         return X_train, y_train, X_test, y_test
     
-    def correct_split(self, X_train, y_train, X_test, y_test, df_with_stats, validation = False):
+    def correct_split(self, X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray, 
+                      df_with_stats: pd.DataFrame, validation : bool = False) -> Tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                                                        np.ndarray]:
+        """
+        Parameters
+        ----------
+        X_train : np.ndarray
+            Samples of the train set
+        y_train : np.ndarray
+            Labels of the train set
+        X_test : np.ndarray
+            Samples of the test set
+        y_test : np.ndarray
+            Labels of the test set
+        df_with_stats : pd.DataFrame
+            DataFrame with the stats of the split
+        validation : bool, optional
+            If the split is a validation split, by default False
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+            X_train, y_train, X_test, y_test
+        """
+
 
         X_train_copy = X_train.copy()
         y_train_copy = y_train.copy()
@@ -70,7 +116,22 @@ class StratifiedSplit(luigi.Task):
 
         return X_train_copy, y_train_copy, X_test_copy, y_test_copy
 
-    def generate_stats(self, y_train, y_test, y_val=None):
+    def generate_stats(self, y_train: np.ndarray, y_test: np.ndarray, y_val: np.ndarray=None) -> Tuple[pd.DataFrame, Any]:
+        """
+        Parameters
+        ----------
+        y_train : np.ndarray
+            Labels of the train set
+        y_test : np.ndarray
+            Labels of the test set
+        y_val : np.ndarray, optional
+            Labels of the validation set, by default None
+        
+        Returns
+        -------
+        Tuple[pd.DataFrame, Any]
+            DataFrame with the stats of the split, styled table
+        """
         y_test_sum = np.sum(y_test)
         y_train_sum = np.sum(y_train)
 

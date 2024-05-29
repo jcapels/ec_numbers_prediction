@@ -14,7 +14,23 @@ class MultiLabelBinarizer(luigi.Task):
     def output(self):
         return luigi.LocalTarget('dataset_binarized.csv')
     
-    def get_unique_labels_by_level(self, dataset, level):
+    def get_unique_labels_by_level(self, dataset: pd.DataFrame, level: str) -> dict:
+        """
+        Get the unique labels of the dataset by the level of the EC number.
+
+        Parameters
+        ----------
+        dataset : pd.DataFrame
+            The dataset with the EC numbers.
+        level : str
+            The level of the EC number.
+        
+        Returns
+        -------
+        dict
+            A dictionary with the unique labels of the dataset by the level of the EC number.
+
+        """
         final_dataset_test = dataset.copy()
         final_dataset_test = final_dataset_test.loc[:,level]
         final_dataset_test.fillna("0", inplace=True)
@@ -25,7 +41,21 @@ class MultiLabelBinarizer(luigi.Task):
         list_of_unique_labels_dict = dict(zip(list_of_unique_labels, range(len(list_of_unique_labels))))
         return list_of_unique_labels_dict
 
-    def get_final_labels(self, dataset):
+    def get_final_labels(self, dataset: pd.DataFrame) -> pd.DataFrame:
+        """
+        Get the final labels of the dataset.
+
+        Parameters
+        ----------
+        dataset : pd.DataFrame
+            The dataset with the EC numbers.
+
+        Returns
+        -------
+        pd.DataFrame
+            The dataset with the final labels.
+
+        """
 
         unique_EC1 = self.get_unique_labels_by_level(dataset, "EC1")
         unique_EC2 = self.get_unique_labels_by_level(dataset, "EC2")
@@ -67,7 +97,20 @@ class MultiLabelBinarizer(luigi.Task):
                 return EC
         return None
     
-    def divide_labels_by_EC_level(self, final_dataset_path):
+    def divide_labels_by_EC_level(self, final_dataset_path: str) -> pd.DataFrame:
+        """
+        Divide the labels by the EC level.
+        
+        Parameters
+        ----------
+        final_dataset_path : str
+            The path to the final dataset.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The final dataset with the labels divided by the EC level.
+        """
         final_dataset = pd.read_csv(final_dataset_path)
 
         EC1_lst = []

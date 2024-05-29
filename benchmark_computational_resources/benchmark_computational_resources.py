@@ -7,7 +7,7 @@ from hurry.filesize import size
 
 
 def benchmark_resources(cuda):
-    pipelines = ["DNN ProtBERT all data", "DNN ESM1b all data", "DNN ESM2 3B all data", "BLAST all data", "Ensemble"]
+    pipelines = ["DNN ESM2 3B all data"]
     datasets = [(25, "test_25.fasta"), (100, "test_100.fasta"), (1000, "test_1000.fasta"), 
                 (10000, "test_10000.fasta"), (100000, "test_100000.fasta")]
     results = pd.DataFrame(columns=["pipeline", "dataset", "time", "memory"])
@@ -54,4 +54,4 @@ def benchmark_resources(cuda):
             results.to_csv("benchmark_results.csv", index=False)
             
 if __name__ == "__main__":
-    benchmark_resources(cuda=True)
+    benchmark_resources(cuda=False)

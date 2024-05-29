@@ -124,8 +124,10 @@ class UniprotXmlParser:
                         "lineage": lineages,
                         "species": species,
                         "taxonomy_id": taxonomy_ids}).to_csv(output_filename, index=False)
+            
+
         
 if __name__ == "__main__":
     #UniprotXmlParser("/home/jcapela/uniprot_parsing/tasks/uniprot_sprot.xml.gz", "Embryophyta").parse("swiss_prot_ec_plants.csv")
-    UniprotXmlParser("/home/jcapela/uniprot_parsing/tasks/uniprot_trembl.xml.gz", "Embryophyta").parse("trembl_prot_ec_plants.csv")
-
+    # UniprotXmlParser("/home/jcapela/uniprot_parsing/tasks/uniprot_trembl.xml.gz", "Embryophyta").parse("trembl_prot_ec_plants.csv")
+    pass
