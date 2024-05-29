@@ -389,7 +389,7 @@ predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction
 
 ## Data availability
 
-Here you can see how to obtain the data used in the project: https://nextcloud.bio.di.uminho.pt/s/X9cYxappMpgGABn.
+Here you can see how to obtain the data used in the project: https://zenodo.org/records/11380947/files/Supplementary_Information_models_data_and_predictions.zip?download=1.
 In this link, you can find the following folders:
 
 - **data** - this folder contains the data used in the project - the data splits are here too.
