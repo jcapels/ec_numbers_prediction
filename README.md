@@ -22,6 +22,10 @@ of both BLASTp and DL models. This will enable us to provide insightful observat
 superiority of DL models, augmented with the latest large language model (LLM) embeddings, 
 over traditional alignment-based methods for predicting protein functions.
 
+### Disclaimer
+
+It is important to emphasize that, for now, this framework predicts EC numbers for a given enzyme but does not determine whether the input molecule is an enzyme. DO NOT APPLY TO NON-ENZYMATIC PROTEINS.
+
 ### Table of contents:
 
 - [Requirements](#requirements)
