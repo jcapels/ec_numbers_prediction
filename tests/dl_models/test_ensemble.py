@@ -124,6 +124,30 @@ class TestPipelines(unittest.TestCase):
         #                     output_path="predictions_ensemble.csv",
         #                     device="cuda", num_gpus=4)
 
+
+        # predict_with_model_from_fasta(pipeline="DNN ESM1b all data",
+        #                     fasta_path="/home/jcapela/ec_numbers_prediction/data/plants_sm_sequences.fasta",
+        #                     output_path="predictions_esm1b.csv",
+        #                     device="cuda", num_gpus=4)
+
+        # predict_with_model_from_fasta(pipeline="DNN ESM2 3B all data",
+        #                     fasta_path="/home/jcapela/ec_numbers_prediction/data/plants_sm_sequences.fasta",
+        #                     output_path="predictions_esm2_3b.csv",
+        #                     device="cuda", num_gpus=4)
+        
+        # predict_with_model_from_fasta(pipeline="DNN ESM2 3B all data",
+        #                     fasta_path="/home/jcapela/ec_numbers_prediction/data/test_2.fasta",
+        #                     output_path="predictions_esm2_3b.csv",
+        #                     device="cpu")
+        
+        predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction/data/test_2.fasta",
+                            output_path="predictions_ensemble.csv",
+                            device="cpu")
+        
+        # predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction/data/plants_sm_sequences.fasta",
+        #                     output_path="predictions_ensemble.csv",
+        #                     device="cuda", num_gpus=4)
+
         # end = time.time()
         # print("Time: ", end - start)
 
