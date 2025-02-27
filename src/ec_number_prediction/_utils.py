@@ -7,7 +7,6 @@ from ec_number_prediction.enumerators import ModelsDownloadPaths, BLASTDownloadP
 import requests
 import zipfile
 import os
-import shutil
 
 from Bio import SeqIO
 import csv

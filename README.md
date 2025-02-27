@@ -22,6 +22,10 @@ of both BLASTp and DL models. This will enable us to provide insightful observat
 superiority of DL models, augmented with the latest large language model (LLM) embeddings, 
 over traditional alignment-based methods for predicting protein functions.
 
+### Disclaimer
+
+It is important to emphasize that, for now, this framework predicts EC numbers for a given enzyme but does not determine whether the input molecule is an enzyme. DO NOT APPLY TO NON-ENZYMATIC PROTEINS.
+
 ### Table of contents:
 
 - [Requirements](#requirements)
@@ -434,4 +438,12 @@ the plots for the performance results of the models for the **halogenases and Pr
     the predictions and evaluate the performance results of the models for the halogenases dataset.
   - **[6.2-analysis_for_benchmarks/6.2-test_for_price_et_al.ipynb](notebooks/6-analysis_for_benchmarks/6.2-test_for_price_et_al.ipynb)**: this notebook contains the code to generate
     the predictions and evaluate the performance results of the models for the Price et al dataset.
+- **[7-identity_splits_evaluation](notebooks/7-identity_splits_evaluation)**: Evaluation and train-test split strategy that focuses on identity thresholds, while resampling the data into five folds
+  - **[7.1-uniref90_splits](notebooks/7-identity_splits_evaluation/7.1-uniref90_splits.py)**: We ran this script to apply multi-label splitting to the data from Uniref90 (90% identity)
+  - **[7.2-create_clusters_and_splits_with_cdhit](notebooks/7-identity_splits_evaluation/7.2-cdhit_splits/)**: We ran cdhit with docker to generate the clusters and then splitted the data. You can find the script to create the clusters in [here](notebooks/7-identity_splits_evaluation/7.2-cdhit_splits/run_cdhit.py) and [here](notebooks/7-identity_splits_evaluation/7.2-cdhit_splits/identity_splits.py).
+  - **[7.3-train_all_models](pipeline/train_for_identity_thresholds.py)**: Train all models for the 30 train-test splits. Also [here](pipeline/train_final_models_for_uniref90_splits.py).
+  - **[7.4-evaluate_models](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/)**: Scripts to generate the metric values are [here](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/7.4.1-get_results_uniref90.py) and [here](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/7.4.2-get_results_identity_thresholds.py). Moreover, the notebook to plot the results is in [here](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/7.4.3-get_results.ipynb).
+- **[8-evaluate_ontology_learning](notebooks/8-evaluate_ontology_learning/)**: The files to generate prediction probabilistic scores for the test set for all models is present [here](notebooks/8-evaluate_ontology_learning/8.1-generate_files_for_all_models), then the one which calls CAFA evaluator is [here](notebooks/8-evaluate_ontology_learning/8.2-evaluate_and_write_results.py).
+
+
 

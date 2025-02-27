@@ -453,6 +453,82 @@ def determine_ensemble_predictions(threshold: int = 2, *model_predictions) -> np
     predictions_voting = predictions_voting.astype(int)
     return predictions_voting
 
+def make_blast_prediction(dataset_path: str, blast_database, blast_database_folder_path,
+                             all_data: bool = True, sequences_field: str = "sequence",
+                             ids_field: str = "id", output_path: str = "predictions.csv"):
+    
+    dataset = SingleInputDataset.from_csv(dataset_path, representation_field=sequences_field,
+                                              instances_ids_field=ids_field)
+    
+    blast_results = _make_blast_prediction(dataset_path, sequences_field, ids_field,
+                                           blast_database_folder_path, blast_database)
+
+    if all_data:
+        path = os.path.join(SRC_PATH, "labels_names_all_data.pkl")
+    else:
+        path = os.path.join(SRC_PATH, "labels_names.pkl")
+
+    labels_names = read_pickle(path)
+
+    blast_results_array = np.zeros((len(blast_results), len(labels_names)))
+    for i, row in blast_results.iterrows():
+        EC1 = str(row["EC1"])
+        EC2 = str(row["EC2"])
+        EC3 = str(row["EC3"])
+        EC4 = str(row["EC4"])
+        if isinstance(EC1, float):
+            EC1 = ""
+        if isinstance(EC2, float):
+            EC2 = ""
+        if isinstance(EC3, float):
+            EC3 = ""
+        if isinstance(EC4, float):
+            EC4 = ""
+        EC1 = EC1.split(";")
+        EC2 = EC2.split(";")
+        EC3 = EC3.split(";")
+        EC4 = EC4.split(";")
+        for EC in EC1 + EC2 + EC3 + EC4:
+            try:
+                index = labels_names.index(EC)
+                blast_results_array[i, index] = 1
+            except ValueError:
+                pass
+
+    results_dataframe = pd.DataFrame(columns=["accession", "EC1", "EC2", "EC3", "EC4"])
+    labels_names = read_pickle(path)
+    # get all the column indexes where the value is 1
+    indices = [np.where(row == 1)[0].tolist() for row in blast_results_array]
+    labels_names = np.array(labels_names)
+
+    ids = dataset.dataframe[dataset.instances_ids_field]
+    for i in range(len(indices)):
+        label_predictions = labels_names[indices[i]]
+
+        EC1, EC2, EC3, EC4 = _generate_ec_number_from_model_predictions(label_predictions)
+        label_predictions = [";".join(EC1)] + [";".join(EC2)] + [";".join(EC3)] + [";".join(EC4)]
+        results_dataframe.loc[i] = [ids[i]] + label_predictions
+
+    results_dataframe.to_csv(output_path, index=False)
+
+def make_blast_predictions_from_fasta_file(fasta_path: str,
+                                     output_path: str,
+                                     all_data: bool = True):
+    
+    current_directory = os.getcwd()
+    temp_csv = os.path.join(current_directory, "temp.csv")
+    convert_fasta_to_csv(fasta_path, temp_csv)
+    blast_database = "BLAST all data"
+    blast_database_folder_path = _download_blast_database_to_cache(blast_database)
+    try:
+        make_blast_prediction(temp_csv, blast_database=blast_database, blast_database_folder_path=blast_database_folder_path,
+                              all_data=all_data, sequences_field="sequence", ids_field="id", output_path=output_path)
+        os.remove(temp_csv)
+    except Exception as e:
+        os.remove(temp_csv)
+        raise Exception(e)
+
+
 
 def make_ensemble_prediction(dataset_path: str, pipelines: List[str], sequences_field: str,
                              ids_field: str, output_path: str, blast_database, blast_database_folder_path,

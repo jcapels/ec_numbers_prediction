@@ -3,10 +3,8 @@ import sys
 from typing import List
 
 from plants_sm.data_structures.dataset.single_input_dataset import SingleInputDataset
-from plants_sm.data_standardization.proteins.padding import SequencePadder
 from plants_sm.featurization.encoding.one_hot_encoder import OneHotEncoder
 from plants_sm.data_standardization.truncation import Truncator
-from plants_sm.data_standardization.x_padder import XPadder
 from plants_sm.data_standardization.proteins.standardization import ProteinStandardizer
 from plants_sm.featurization.proteins.bio_embeddings.esm import ESMEncoder
 from plants_sm.featurization.proteins.bio_embeddings.prot_bert import ProtBert
