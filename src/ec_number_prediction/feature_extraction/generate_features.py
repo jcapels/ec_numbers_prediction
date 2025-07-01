@@ -3,10 +3,8 @@ import sys
 from typing import List
 
 from plants_sm.data_structures.dataset.single_input_dataset import SingleInputDataset
-from plants_sm.data_standardization.proteins.padding import SequencePadder
 from plants_sm.featurization.encoding.one_hot_encoder import OneHotEncoder
 from plants_sm.data_standardization.truncation import Truncator
-from plants_sm.data_standardization.x_padder import XPadder
 from plants_sm.data_standardization.proteins.standardization import ProteinStandardizer
 from plants_sm.featurization.proteins.bio_embeddings.esm import ESMEncoder
 from plants_sm.featurization.proteins.bio_embeddings.prot_bert import ProtBert
@@ -130,20 +128,20 @@ def generate_esm_vectors(esm_function: str, save_folder: str, dataset_directory:
 
 
 if __name__ == "__main__":
-    encoding_type = sys.argv[0]
+    encoding_type = sys.argv[1]
 
     if encoding_type == "one_hot":
-        save_folder = sys.argv[1]
-        dataset_directory = sys.argv[2]
-        generate_one_hot_encodings(dataset_directory, save_folder)
-    elif encoding_type == "prot_bert":
-        save_folder = sys.argv[1]
-        dataset_directory = sys.argv[2]
-        generate_prot_bert_vectors(save_folder, dataset_directory)
-    elif encoding_type == "esm":
-        esm_function = sys.argv[1]
         save_folder = sys.argv[2]
         dataset_directory = sys.argv[3]
+        generate_one_hot_encodings(dataset_directory, save_folder)
+    elif encoding_type == "prot_bert":
+        save_folder = sys.argv[2]
+        dataset_directory = sys.argv[3]
+        generate_prot_bert_vectors(save_folder, dataset_directory)
+    elif encoding_type == "esm":
+        esm_function = sys.argv[2]
+        save_folder = sys.argv[3]
+        dataset_directory = sys.argv[4]
         generate_esm_vectors(esm_function, save_folder, dataset_directory)
 
     else:

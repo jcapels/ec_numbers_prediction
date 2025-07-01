@@ -7,10 +7,10 @@ from ec_number_prediction.enumerators import ModelsDownloadPaths, BLASTDownloadP
 import requests
 import zipfile
 import os
-import shutil
 
 from Bio import SeqIO
 import csv
+
 
 def get_ec_levels(labels):
     level_1 = []
@@ -182,6 +182,7 @@ def divide_labels_by_EC_level(final_dataset, ec_label):
 
     return final_dataset
 
+
 def convert_fasta_to_csv(fasta_file: str, csv_file: str):
     """
     Converts a FASTA file to a CSV file.
@@ -198,7 +199,6 @@ def convert_fasta_to_csv(fasta_file: str, csv_file: str):
         csv_writer.writerow(["id", "sequence"])  # Writing header
         for record in SeqIO.parse(fasta, "fasta"):
             csv_writer.writerow([record.id, str(record.seq)])
-
 
 
 def _download_and_unzip_file_to_cache(url: str, cache_path: str, method_name: str) -> str:
@@ -219,7 +219,7 @@ def _download_and_unzip_file_to_cache(url: str, cache_path: str, method_name: st
     str
         Path to the downloaded file.
     """
-    
+
     pipeline_name_for_path = method_name.replace(" ", "_")
     pipeline_cache_file = os.path.join(cache_path, f"{pipeline_name_for_path}.zip")
 
@@ -229,7 +229,7 @@ def _download_and_unzip_file_to_cache(url: str, cache_path: str, method_name: st
 
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
-    
+
     print(f"Downloading pipeline {method_name} to cache...")
     response = requests.get(url, stream=True)
     # Sizes in bytes.
@@ -250,6 +250,7 @@ def _download_and_unzip_file_to_cache(url: str, cache_path: str, method_name: st
     os.remove(pipeline_cache_file)
 
     return os.path.join(cache_path, pipeline_name_for_path)
+
 
 def _download_blast_database_to_cache(blast_database: str) -> str:
     """
@@ -272,14 +273,15 @@ def _download_blast_database_to_cache(blast_database: str) -> str:
     }
 
     if blast_database not in databases:
-        raise Exception(f"BLAST database {blast_database} not found.")
+        raise Exception(
+            f"BLAST database {blast_database} not found, please choose one of the following: {', '.join(databases.keys())}.")
 
     database_url = databases[blast_database]
 
     database_cache_path = os.path.join(os.path.expanduser("~"), ".ec_number_prediction", "blast_databases")
 
     return _download_and_unzip_file_to_cache(database_url, database_cache_path, blast_database)
-    
+
 
 def _download_pipeline_to_cache(pipeline: str) -> str:
     """
@@ -306,8 +308,9 @@ def _download_pipeline_to_cache(pipeline: str) -> str:
     }
 
     if pipeline not in pipelines:
-        raise Exception(f"Pipeline {pipeline} not found.")
-    
+        raise Exception(
+            f"Pipeline {pipeline} not found. Please choose one of the following: {', '.join(pipelines.keys())}.")
+
     pipeline_url = pipelines[pipeline]
 
     pipeline_cache_path = os.path.join(os.path.expanduser("~"), ".ec_number_prediction", "pipelines")

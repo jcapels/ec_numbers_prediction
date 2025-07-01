@@ -61,4 +61,4 @@ def benchmark_resources(cuda):
             results.to_csv("benchmark_results.csv", index=False)
             
 if __name__ == "__main__":
-    benchmark_resources(cuda=True)
+    benchmark_resources(cuda=False)

@@ -22,6 +22,10 @@ of both BLASTp and DL models. This will enable us to provide insightful observat
 superiority of DL models, augmented with the latest large language model (LLM) embeddings, 
 over traditional alignment-based methods for predicting protein functions.
 
+### Disclaimer
+
+It is important to emphasize that, for now, this framework predicts EC numbers for a given enzyme but does not determine whether the input molecule is an enzyme. DO NOT APPLY TO NON-ENZYMATIC PROTEINS.
+
 ### Table of contents:
 
 - [Requirements](#requirements)
@@ -148,6 +152,12 @@ generate_one_hot_encodings(save_folder="/home/working_dir", dataset_directory="/
 
 Training the baselines is also easy:
 
+### Models' implementation
+
+- DNN - [Fully connected neural network](https://github.com/jcapels/PlantsSM/blob/v0.0.2/src/plants_sm/models/fc/fc.py)
+- DeepEC CNN3 - [CNN](https://github.com/jcapels/PlantsSM/blob/v0.0.2/src/plants_sm/models/ec_number_prediction/deepec.py)
+- D-SPACE EC - [CNN](https://github.com/jcapels/PlantsSM/blob/v0.0.2/src/plants_sm/models/ec_number_prediction/d_space.py)
+
 ### Train baselines
 
 ```python
@@ -215,8 +225,8 @@ Here you can see how to predict EC numbers with a model. Note that the model cho
 
 - DNN ProtBERT all data
 - DNN ESM1b all data
-- DNN ESM2 3B all data - note that this model requires at least **12 GB** of RAM to be run. If you intend to use GPU to 
-make the predictions, you need to have at least **20 GB** of GPU memory or 4 GPUs with **8 GB**.
+- DNN ESM2 3B all data - note that this model requires at least **25 GB** of RAM to be run. If you intend to use GPU to 
+make the predictions, you need to have at least **25 GB** of CPU memory or 4 GPUs with **8 GB** each.
 - ProtBERT trial 2 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM1b trial 4 train plus validation (for this model, you need to pass all_data=False)
 - DNN ESM2 3B trial 2 train plus validation (for this model, you need to pass all_data=False)
@@ -230,15 +240,21 @@ Here you can see the time taken and memory usage for each model to predict for d
 | DNN ProtBERT    | 1000        | 0:00:56 | 1G           |
 | DNN ProtBERT    | 10000       | 0:09:00 | 1G           |
 | DNN ProtBERT    | 100000      | 1:55:08 | 7G           |
-| DNN ESM1b       | 25          | 0:00:28 | 2G           |
-| DNN ESM1b       | 100         | 0:00:40 | 2G           |
-| DNN ESM1b       | 1000        | 0:02:22 | 2G           |
-| DNN ESM1b       | 10000       | 0:19:22 | 2G           |
-| DNN ESM1b       | 100000      | 3:35:04 | 7G           |
-| DNN ESM2 3B     | 25          | 0:01:35 | 10G          |
-| DNN ESM2 3B     | 100         | 0:03:40 | 10G          |
-| DNN ESM2 3B     | 1000        | 0:28:27 | 10G          |
-| DNN ESM2 3B     | 10000       | 4:33:50 | 10G          |
+| DNN ESM1b       | 25          | 0:00:28 | 10G           |
+| DNN ESM1b       | 100         | 0:00:40 | 10G           |
+| DNN ESM1b       | 1000        | 0:02:22 | 10G           |
+| DNN ESM1b       | 10000       | 0:19:22 | 10G           |
+| DNN ESM1b       | 100000      | 3:35:04 | 10G           |
+| DNN ESM2 3B     | 25          | 0:01:35 | 25G          |
+| DNN ESM2 3B     | 100         | 0:03:40 | 25G          |
+| DNN ESM2 3B     | 1000        | 0:28:27 | 25G          |
+| DNN ESM2 3B     | 10000       | 4:33:50 | 25G          |
+| DNN ESM2 3B | 100000 | 1 day, 22:10:43 | 25G  |
+| BLAST | 25 | 0:01:37 | 264M |
+| BLAST | 100 | 0:07:29 | 264M |
+| BLAST | 1000 | 0:48:55 | 264M | 
+| BLAST | 10000 | 8:20:03 | 266M |
+| BLAST | 100000 | 2 days, 20:03:17.393101 | 351M |
  
 
 The parameters of the function are the following:
@@ -345,7 +361,7 @@ predict_with_blast_from_fasta(database_name="BLAST all data",
 
 ### Predict with an ensemble of BLAST and DL models
 
-Here you can see how to predict EC numbers with an ensemble between BLAST and models.
+Here you can see how to predict EC numbers with an ensemble between BLAST and models. **The ensemble requires over 25 GB of RAM.**
 
 The parameters of the function are the following:
 
@@ -377,7 +393,7 @@ predict_with_ensemble_from_fasta(fasta_path="/home/jcapela/ec_numbers_prediction
 
 ## Data availability
 
-Here you can see how to obtain the data used in the project: https://nextcloud.bio.di.uminho.pt/s/X9cYxappMpgGABn.
+Here you can see how to obtain the data used in the project: https://zenodo.org/records/11380947/files/Supplementary_Information_models_data_and_predictions.zip?download=1.
 In this link, you can find the following folders:
 
 - **data** - this folder contains the data used in the project - the data splits are here too.
@@ -422,4 +438,12 @@ the plots for the performance results of the models for the **halogenases and Pr
     the predictions and evaluate the performance results of the models for the halogenases dataset.
   - **[6.2-analysis_for_benchmarks/6.2-test_for_price_et_al.ipynb](notebooks/6-analysis_for_benchmarks/6.2-test_for_price_et_al.ipynb)**: this notebook contains the code to generate
     the predictions and evaluate the performance results of the models for the Price et al dataset.
+- **[7-identity_splits_evaluation](notebooks/7-identity_splits_evaluation)**: Evaluation and train-test split strategy that focuses on identity thresholds, while resampling the data into five folds
+  - **[7.1-uniref90_splits](notebooks/7-identity_splits_evaluation/7.1-uniref90_splits.py)**: We ran this script to apply multi-label splitting to the data from Uniref90 (90% identity)
+  - **[7.2-create_clusters_and_splits_with_cdhit](notebooks/7-identity_splits_evaluation/7.2-cdhit_splits/)**: We ran cdhit with docker to generate the clusters and then splitted the data. You can find the script to create the clusters in [here](notebooks/7-identity_splits_evaluation/7.2-cdhit_splits/run_cdhit.py) and [here](notebooks/7-identity_splits_evaluation/7.2-cdhit_splits/identity_splits.py).
+  - **[7.3-train_all_models](pipeline/train_for_identity_thresholds.py)**: Train all models for the 30 train-test splits. Also [here](pipeline/train_final_models_for_uniref90_splits.py).
+  - **[7.4-evaluate_models](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/)**: Scripts to generate the metric values are [here](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/7.4.1-get_results_uniref90.py) and [here](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/7.4.2-get_results_identity_thresholds.py). Moreover, the notebook to plot the results is in [here](notebooks/7-identity_splits_evaluation/7.4-evaluate_models/7.4.3-get_results.ipynb).
+- **[8-evaluate_ontology_learning](notebooks/8-evaluate_ontology_learning/)**: The files to generate prediction probabilistic scores for the test set for all models is present [here](notebooks/8-evaluate_ontology_learning/8.1-generate_files_for_all_models), then the one which calls CAFA evaluator is [here](notebooks/8-evaluate_ontology_learning/8.2-evaluate_and_write_results.py).
+
+
 

@@ -1,11 +1,20 @@
+from abc import abstractmethod
 import pickle
 import luigi
 import pandas as pd
 
-from ec_number_prediction.data_processing_pipeline.scrape_uniprot import UniprotScraper
-
+from ec_number_prediction.data_processing_pipeline.scrape_uniprot import UniprotScraper, UniprotScraperEnzymes
 
 class FilterByUniRef90(luigi.Task):
+
+    @abstractmethod
+    def _run(self):
+        pass
+
+    def run(self):
+        self._run()
+
+class FilterByUniRef90ECNumbers(FilterByUniRef90):
 
     def requires(self):
         return UniprotScraper()
@@ -16,7 +25,7 @@ class FilterByUniRef90(luigi.Task):
     def input(self):
         return [luigi.LocalTarget('trembl_prot_ec.csv'), luigi.LocalTarget('swiss_prot_ec.csv'), luigi.LocalTarget('cluster_representatives.pkl')]
 
-    def run(self):
+    def _run(self):
         df_trembl = pd.read_csv(self.input()[0].path)
         df_swiss_prot = pd.read_csv(self.input()[1].path)
 
@@ -28,3 +37,24 @@ class FilterByUniRef90(luigi.Task):
 
         df_trembl_filtered.to_csv(self.output()[0].path, index=False)
         df_sp_filtered.to_csv(self.output()[1].path, index=False)
+
+class FilterByUniRef90EnzymesNonEnzymes(FilterByUniRef90):
+
+    def requires(self):
+        return UniprotScraperEnzymes()
+
+    def output(self):
+        return [luigi.LocalTarget('swiss_prot_enzymes_filtered.csv')]
+    
+    def input(self):
+        return [luigi.LocalTarget('swiss_prot_enzymes.csv'), luigi.LocalTarget('cluster_representatives.pkl')]
+
+    def _run(self):
+        df_swiss_prot = pd.read_csv(self.input()[0].path)
+
+        with open(self.input()[1].path, 'rb') as fp:
+            cluster_representatives = pickle.load(fp)
+
+        df_sp_filtered = df_swiss_prot[df_swiss_prot["accession"].isin(cluster_representatives)]
+
+        df_sp_filtered.to_csv(self.output()[0].path, index=False)

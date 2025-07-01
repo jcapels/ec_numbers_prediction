@@ -19,10 +19,42 @@ class EnrichmentWithTrembl(luigi.Task):
     def output(self):
         return luigi.LocalTarget('dataset_enriched.csv')
 
-    def get_ec_numbers_with_less_than_n_sequences(self, df, n):
+    def get_ec_numbers_with_less_than_n_sequences(self, df: pd.DataFrame, n: int) -> pd.DataFrame:
+        """
+        Get the EC numbers with less than n sequences.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame with the EC numbers.
+        n : int
+            The number of sequences.
+
+        Returns
+        -------
+        pd.DataFrame
+            The DataFrame with the EC numbers with less than n sequences.
+        """
         return df[df["num_sequences"] < n]
 
-    def get_sequences_per_ec(self, swiss_prot_dataframe, take_out_incomplete_ecs=True, level=4):
+    def get_sequences_per_ec(self, swiss_prot_dataframe: pd.DataFrame, take_out_incomplete_ecs: bool =True, level: int = 4) -> pd.DataFrame:
+        """
+        Get the number of sequences per EC.
+
+        Parameters
+        ----------
+        swiss_prot_dataframe : pd.DataFrame
+            The DataFrame with the Swiss-Prot data.
+        take_out_incomplete_ecs : bool
+            Whether to take out incomplete ECs.
+        level : int
+            The level of the EC number.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The DataFrame with the number of sequences per EC.    
+        """
         df = swiss_prot_dataframe
         print("Number of proteins: {}".format(len(df)))
         df = df.dropna()
@@ -63,7 +95,21 @@ class EnrichmentWithTrembl(luigi.Task):
 
         return df
 
-    def create_enriched_dataset(self, sequences_per_ec_less_than_100):
+    def create_enriched_dataset(self, sequences_per_ec_less_than_100: pd.DataFrame) -> pd.DataFrame:
+        """
+        Create an enriched dataset.
+
+        Parameters
+        ----------
+        sequences_per_ec_less_than_100 : pd.DataFrame
+            The DataFrame with the sequences per EC with less than 100 sequences.
+
+        Returns
+        -------
+        pd.DataFrame
+            The enriched dataset.
+
+        """
         trembl = pd.read_csv(self.input()[0].path)
 
         # put first column as keys of dictionary and the rsecond as values

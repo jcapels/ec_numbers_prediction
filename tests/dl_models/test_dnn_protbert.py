@@ -16,7 +16,7 @@ class TestProtBERT(TestCase):
         
     def test_prot_bert_prediction_from_fasta(self):
         predict_with_model_from_fasta(pipeline="DNN ProtBERT all data",
-                                        fasta_path="test.fasta",
+                                        fasta_path="/home/jcapela/ec_numbers_prediction/data/test.fasta",
                                         output_path="predictions_prot_bert.csv",
                                         device="cuda:0")
         

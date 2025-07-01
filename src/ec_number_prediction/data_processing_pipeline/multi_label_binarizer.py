@@ -14,7 +14,23 @@ class MultiLabelBinarizer(luigi.Task):
     def output(self):
         return luigi.LocalTarget('dataset_binarized.csv')
     
-    def get_unique_labels_by_level(self, dataset, level):
+    def get_unique_labels_by_level(self, dataset: pd.DataFrame, level: str) -> dict:
+        """
+        Get the unique labels of the dataset by the level of the EC number.
+
+        Parameters
+        ----------
+        dataset : pd.DataFrame
+            The dataset with the EC numbers.
+        level : str
+            The level of the EC number.
+        
+        Returns
+        -------
+        dict
+            A dictionary with the unique labels of the dataset by the level of the EC number.
+
+        """
         final_dataset_test = dataset.copy()
         final_dataset_test = final_dataset_test.loc[:,level]
         final_dataset_test.fillna("0", inplace=True)
@@ -25,7 +41,21 @@ class MultiLabelBinarizer(luigi.Task):
         list_of_unique_labels_dict = dict(zip(list_of_unique_labels, range(len(list_of_unique_labels))))
         return list_of_unique_labels_dict
 
-    def get_final_labels(self, dataset):
+    def get_final_labels(self, dataset: pd.DataFrame) -> pd.DataFrame:
+        """
+        Get the final labels of the dataset.
+
+        Parameters
+        ----------
+        dataset : pd.DataFrame
+            The dataset with the EC numbers.
+
+        Returns
+        -------
+        pd.DataFrame
+            The dataset with the final labels.
+
+        """
 
         unique_EC1 = self.get_unique_labels_by_level(dataset, "EC1")
         unique_EC2 = self.get_unique_labels_by_level(dataset, "EC2")
@@ -92,20 +122,42 @@ class MultiLabelBinarizer(luigi.Task):
                 return EC
         return None
     
-    def _divide_labels_by_EC_level(self, ECs):
+    def divide_labels_by_EC_level(self, final_dataset_path: str) -> pd.DataFrame:
+        """
+        Divide the labels by the EC level.
+        
+        Parameters
+        ----------
+        final_dataset_path : str
+            The path to the final dataset.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The final dataset with the labels divided by the EC level.
+        """
+        final_dataset = pd.read_csv(final_dataset_path)
 
-        ECs = ECs.split(";")
-        # get the first 3 ECs with regular expression
-        EC3 = []
-        EC2 = []
-        EC1 = []
-        EC4 = []
-        for EC in ECs:
-            new_EC = re.search(r"^\d+.\d+.\d+.n*\d+", EC)
-            new_EC = self.get_ec_from_regex_match(new_EC)
-            if isinstance(new_EC, str):
-                if new_EC not in EC4:
-                    EC4.append(new_EC)
+        EC1_lst = []
+        EC2_lst = []
+        EC3_lst = []
+        EC4_lst = []
+
+
+        for _, row in final_dataset.iterrows():
+            ECs = row["EC"]
+            ECs = ECs.split(";")
+            # get the first 3 ECs with regular expression
+            EC3 = []
+            EC2 = []
+            EC1 = []
+            EC4 = []
+            for EC in ECs:
+                new_EC = re.search(r"^\d+.\d+.\d+.n*\d+", EC)
+                new_EC = self.get_ec_from_regex_match(new_EC)
+                if isinstance(new_EC, str):
+                    if new_EC not in EC4:
+                        EC4.append(new_EC)
 
             new_EC = re.search(r"^\d+.\d+.\d+", EC)
             new_EC = self.get_ec_from_regex_match(new_EC)
