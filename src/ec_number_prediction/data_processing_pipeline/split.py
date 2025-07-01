@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from logging import Logger
 import logging
 import os
@@ -5,14 +6,53 @@ import luigi
 import numpy as np
 import pandas as pd
 
+import sklearn
 from skmultilearn.model_selection import IterativeStratification
 
 from ec_number_prediction.data_processing_pipeline.n_classes_removal import NClassesRemoval
+from ec_number_prediction.data_processing_pipeline.filter_uniref import FilterByUniRef90EnzymesNonEnzymes
 
 logger = logging.getLogger('luigi-interface')
 
+class Split(luigi.Task):
 
-class StratifiedSplit(luigi.Task):
+    @abstractmethod
+    def _run(self):
+        pass
+
+    def run(self):
+        return self._run()
+    
+class RandomSplitEnzymes(Split):
+
+    def requires(self):
+        return FilterByUniRef90EnzymesNonEnzymes()
+    
+    def input(self):
+        return luigi.LocalTarget('swiss_prot_enzymes_filtered.csv')
+
+    def output(self):
+        return [
+                luigi.LocalTarget('splits/train_enzymes.csv'), 
+                luigi.LocalTarget('splits/test_enzymes.csv'),
+                luigi.LocalTarget('splits/validation_enzymes.csv'),
+                ]
+    
+    def _run(self):
+        dataset = pd.read_csv(self.input().path)
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=0.15, random_state=42)
+        X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(X_train, y_train, test_size=0.25, random_state=42)
+
+        os.makedirs("splits", exist_ok=True)
+
+        pd.concat([X_train, y_train], axis=1).to_csv("splits/train_enzymes.csv", index=False)
+        pd.concat([X_test, y_test], axis=1).to_csv("splits/test_enzymes.csv", index=False)
+        pd.concat([X_val, y_val], axis=1).to_csv("splits/validation_enzymes.csv", index=False)
+
+
+class StratifiedSplitECNumbers(Split):
 
     def requires(self):
         return NClassesRemoval()
@@ -43,24 +83,25 @@ class StratifiedSplit(luigi.Task):
 
         return X_train, y_train, X_test, y_test
     
-    def correct_split(self, X_train, y_train, X_test, y_test, df_with_stats, validation = False):
+    def correct_split(self, X_train, y_train, X_test, y_test, df_with_stats, validation = False, compensation=15):
 
         X_train_copy = X_train.copy()
         y_train_copy = y_train.copy()
         X_test_copy = X_test.copy()
         y_test_copy = y_test.copy()
 
-        for i in range(15):
+        for i in range(compensation):
             if validation:
                 ecs = df_with_stats[(df_with_stats["Percentage of data"] <= i) & (df_with_stats["Percentage of data"] > i - 1) 
                                 & (df_with_stats["variable"] == "Validation relative split")].loc[:,"EC"]
             else:
                 ecs = df_with_stats[(df_with_stats["Percentage of data"] <= i) & (df_with_stats["Percentage of data"] > i - 1) 
                                 & (df_with_stats["variable"] == "Test relative split")].loc[:,"EC"]
-            print(i)
             for ec in ecs:
                 cases = y_train_copy[y_train_copy[ec] == 1]
-                n_samples = round(((15-i)/100) *cases.shape[0], 3)
+                n_samples = round(((compensation-i)/100) *cases.shape[0], 3)
+                if n_samples < 1:
+                    n_samples = 1
                 indexes = cases.sample(int(n_samples), random_state=i).index
                 X_test_copy = pd.concat((X_test_copy, X_train_copy.loc[indexes]))
                 y_test_copy = pd.concat((y_test_copy, y_train_copy.loc[indexes, :]))

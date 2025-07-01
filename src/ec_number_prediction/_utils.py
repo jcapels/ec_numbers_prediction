@@ -12,6 +12,22 @@ import shutil
 from Bio import SeqIO
 import csv
 
+def get_ec_levels(labels):
+    level_1 = []
+    level_2 = []
+    level_3 = []
+    level_4 = []
+    for i, label in enumerate(labels):
+        if re.match(r"^\d+.\d+.\d+.n*\d+$", label):
+            level_4.append(i)
+        elif re.match(r"^\d+.\d+.\d+$", label):
+            level_3.append(i)
+        elif re.match(r"^\d+.\d+$", label):
+            level_2.append(i)
+        elif re.match(r"^\d+$", label):
+            level_1.append(i)
+    return level_1, level_2, level_3, level_4
+
 def get_unique_labels_by_level(dataset, level):
     final_dataset_test = dataset.copy()
     final_dataset_test = final_dataset_test.loc[:, level]

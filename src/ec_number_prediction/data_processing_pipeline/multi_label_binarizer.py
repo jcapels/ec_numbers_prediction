@@ -56,9 +56,34 @@ class MultiLabelBinarizer(luigi.Task):
         array_EC3 = pd.DataFrame(array_EC3, columns=unique_EC3.keys())
         array_EC4 = pd.DataFrame(array_EC4, columns=unique_EC4.keys())
 
+        self.labels = list(array_EC1.columns) + list(array_EC2.columns) + list(array_EC3.columns) + list(array_EC4.columns)
+
         dataset = pd.concat((dataset, array_EC1, array_EC2, array_EC3, array_EC4), axis=1)
         return dataset
     
+    def inverse_transform(self, y):
+        return [self.labels[i] for i in range(len(y)) if y[i] == 1]
+    
+    def transform(self, dataset: pd.DataFrame):
+        y_transformed = np.zeros((dataset.shape[0], len(self.labels)))
+        for i, row in dataset.iterrows():
+            ec = row["EC"]
+            if not pd.isnull(ec):
+                EC1, EC2, EC3, EC4 = self._divide_labels_by_EC_level(ec)
+                for EC in EC1:
+                    if EC in self.labels:
+                        y_transformed[i, self.labels.index(EC)] = 1
+                for EC in EC2:
+                    if EC in self.labels:
+                        y_transformed[i, self.labels.index(EC)] = 1
+                for EC in EC3:
+                    if EC in self.labels:
+                        y_transformed[i, self.labels.index(EC)] = 1
+                for EC in EC4:
+                    if EC in self.labels:
+                        y_transformed[i, self.labels.index(EC)] = 1
+        return y_transformed
+        
 
     def get_ec_from_regex_match(self, match):
         if match is not None:
@@ -67,6 +92,42 @@ class MultiLabelBinarizer(luigi.Task):
                 return EC
         return None
     
+    def _divide_labels_by_EC_level(self, ECs):
+
+        ECs = ECs.split(";")
+        # get the first 3 ECs with regular expression
+        EC3 = []
+        EC2 = []
+        EC1 = []
+        EC4 = []
+        for EC in ECs:
+            new_EC = re.search(r"^\d+.\d+.\d+.n*\d+", EC)
+            new_EC = self.get_ec_from_regex_match(new_EC)
+            if isinstance(new_EC, str):
+                if new_EC not in EC4:
+                    EC4.append(new_EC)
+
+            new_EC = re.search(r"^\d+.\d+.\d+", EC)
+            new_EC = self.get_ec_from_regex_match(new_EC)
+            if isinstance(new_EC, str):
+                if new_EC not in EC3:
+                    EC3.append(new_EC)
+
+            new_EC = re.search(r"^\d+.\d+", EC)
+            new_EC = self.get_ec_from_regex_match(new_EC)
+            if isinstance(new_EC, str):
+                if new_EC not in EC2:
+                    EC2.append(new_EC)
+
+            new_EC = re.search(r"^\d+", EC)
+            new_EC = self.get_ec_from_regex_match(new_EC)
+            if isinstance(new_EC, str):
+                if new_EC not in EC1:
+                    EC1.append(new_EC)
+
+        return EC1, EC2, EC3, EC4
+
+
     def divide_labels_by_EC_level(self, final_dataset_path):
         final_dataset = pd.read_csv(final_dataset_path)
 
@@ -75,39 +136,8 @@ class MultiLabelBinarizer(luigi.Task):
         EC3_lst = []
         EC4_lst = []
 
-
         for _, row in final_dataset.iterrows():
-            ECs = row["EC"]
-            ECs = ECs.split(";")
-            # get the first 3 ECs with regular expression
-            EC3 = []
-            EC2 = []
-            EC1 = []
-            EC4 = []
-            for EC in ECs:
-                new_EC = re.search(r"^\d+.\d+.\d+.n*\d+", EC)
-                new_EC = self.get_ec_from_regex_match(new_EC)
-                if isinstance(new_EC, str):
-                    if new_EC not in EC4:
-                        EC4.append(new_EC)
-
-                new_EC = re.search(r"^\d+.\d+.\d+", EC)
-                new_EC = self.get_ec_from_regex_match(new_EC)
-                if isinstance(new_EC, str):
-                    if new_EC not in EC3:
-                        EC3.append(new_EC)
-
-                new_EC = re.search(r"^\d+.\d+", EC)
-                new_EC = self.get_ec_from_regex_match(new_EC)
-                if isinstance(new_EC, str):
-                    if new_EC not in EC2:
-                        EC2.append(new_EC)
-
-                new_EC = re.search(r"^\d+", EC)
-                new_EC = self.get_ec_from_regex_match(new_EC)
-                if isinstance(new_EC, str):
-                    if new_EC not in EC1:
-                        EC1.append(new_EC)
+            EC1, EC2, EC3, EC4 = self._divide_labels_by_EC_level(row["EC"])
 
             if len(EC4) == 0:
                 EC4_lst.append(np.NaN)
@@ -125,6 +155,7 @@ class MultiLabelBinarizer(luigi.Task):
                 EC1_lst.append(np.NaN)
             else:
                 EC1_lst.append(";".join(EC1))
+
 
         assert None not in EC1_lst
         assert None not in EC2_lst
