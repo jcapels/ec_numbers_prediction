@@ -1,4 +1,5 @@
 import datetime
+import os
 import time
 from ec_number_prediction.predictions import predict_with_blast_from_fasta, predict_with_ensemble_from_fasta, predict_with_model_from_fasta
 import tracemalloc
@@ -8,9 +9,15 @@ from hurry.filesize import size
 
 def benchmark_resources(cuda):
     pipelines = ["DNN ProtBERT all data", "DNN ESM1b all data", "DNN ESM2 3B all data", "BLAST all data", "Ensemble"]
+    pipelines = ["DNN ESM2 3B all data", "BLAST all data", "Ensemble"]
     datasets = [(25, "test_25.fasta"), (100, "test_100.fasta"), (1000, "test_1000.fasta"), 
                 (10000, "test_10000.fasta"), (100000, "test_100000.fasta")]
-    results = pd.DataFrame(columns=["pipeline", "dataset", "time", "memory"])
+    
+    if os.path.exists("benchmark_results.csv"):
+        results = pd.read_csv("benchmark_results.csv")
+    else:
+        results = pd.DataFrame(columns=["pipeline", "dataset", "time", "memory"])
+
     for pipeline in pipelines:
         for dataset in datasets:
             tracemalloc.start()
