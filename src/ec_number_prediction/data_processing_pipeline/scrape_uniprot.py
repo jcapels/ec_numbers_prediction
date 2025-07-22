@@ -1,3 +1,4 @@
+import os
 import luigi
 
 from ec_number_prediction.data_processing_pipeline.uniprot_xml_parser import UniprotXmlECNumbersParser, UniprotEnzymesNonEnzymesXmlParser
@@ -24,11 +25,12 @@ class UniprotScraperEnzymes(luigi.Task):
         return DownloadSwissProt(), DownloadUniref()
 
     def output(self):
-        return luigi.LocalTarget('swiss_prot_enzymes.csv')
+        return luigi.LocalTarget('swiss_prot_enzymes.csv'), luigi.LocalTarget('cluster_representatives.pkl')
 
     def run(self):
-        UniprotEnzymesNonEnzymesXmlParser(self.input()[0].path).parse(self.output().path)
-        UniRefXmlParser(self.input()[1].path).parse(self.output().path)
+        if not os.path.exists('swiss_prot_enzymes.csv'):
+            UniprotEnzymesNonEnzymesXmlParser(self.input()[0].path).parse(self.output()[0].path)
+        UniRefXmlParser(self.input()[1].path).parse(self.output()[1].path)
 
 class UniprotScraper(luigi.Task):
 

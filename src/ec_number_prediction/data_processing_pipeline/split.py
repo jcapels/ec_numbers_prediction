@@ -136,7 +136,7 @@ class StratifiedSplitECNumbers(Split):
         X_test_copy = X_test.copy()
         y_test_copy = y_test.copy()
 
-        for i in range(compensation):
+        for i in range(15):
             if validation:
                 ecs = df_with_stats[(df_with_stats["Percentage of data"] <= i) & (df_with_stats["Percentage of data"] > i - 1) 
                                 & (df_with_stats["variable"] == "Validation relative split")].loc[:,"EC"]
@@ -145,7 +145,7 @@ class StratifiedSplitECNumbers(Split):
                                 & (df_with_stats["variable"] == "Test relative split")].loc[:,"EC"]
             for ec in ecs:
                 cases = y_train_copy[y_train_copy[ec] == 1]
-                n_samples = round(((compensation-i)/100) *cases.shape[0], 3)
+                n_samples = round(((15-i)/100) *cases.shape[0], 3)
                 if n_samples < 1:
                     n_samples = 1
                 indexes = cases.sample(int(n_samples), random_state=i).index

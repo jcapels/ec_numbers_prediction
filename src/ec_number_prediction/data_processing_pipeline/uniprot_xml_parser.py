@@ -62,22 +62,22 @@ class UniprotXmlECNumbersParser(UniprotXmlParser):
         bar = tqdm(total=249308459)
         for event, elem in self.context:
 
-            if (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}accession":
+            if (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}accession":
                 if current_protein_accession is None:
                     accession = elem.text
                     current_protein_accession = accession
 
-            elif (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}sequence":
+            elif (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}sequence":
                 if current_protein_sequence is None:
                     sequence = elem.text
                     current_protein_sequence = sequence
 
-            elif (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}name":
+            elif (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}name":
                 if current_name is None:
                     name = elem.text
                     current_name = name
 
-            elif (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}dbReference":
+            elif (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}dbReference":
                 if elem.attrib. \
                         has_key("type") and elem.attrib["type"] == "EC":
                     have_EC = True
@@ -85,17 +85,17 @@ class UniprotXmlECNumbersParser(UniprotXmlParser):
                         current_ECs.append(elem.attrib["id"])
 
             elif self.taxonomy_restrictions is not None:
-                if (event == "start") and elem.tag == "{http://uniprot.org/uniprot}organism":
-                    name = elem.find('.//{http://uniprot.org/uniprot}name')
-                    taxons = elem.findall('.//{http://uniprot.org/uniprot}taxon')
+                if (event == "start") and elem.tag == "{https://uniprot.org/uniprot}organism":
+                    name = elem.find('.//{https://uniprot.org/uniprot}name')
+                    taxons = elem.findall('.//{https://uniprot.org/uniprot}taxon')
                     for taxon in taxons:
                         if taxon.text == self.taxonomy_restrictions:
                             current_species = name.text
-                            current_taxonomy_id = elem.find('.//{http://uniprot.org/uniprot}dbReference').attrib["id"]
+                            current_taxonomy_id = elem.find('.//{https://uniprot.org/uniprot}dbReference').attrib["id"]
                             current_lineage.extend([taxon_copy.text for taxon_copy in taxons if taxon_copy.text is not None])
                             
 
-            if event == "end" and elem.tag == "{http://uniprot.org/uniprot}entry":
+            if event == "end" and elem.tag == "{https://uniprot.org/uniprot}entry":
                 bar.update(1)
 
                 if have_EC:
@@ -167,25 +167,25 @@ class UniprotEnzymesNonEnzymesXmlParser(UniprotXmlParser):
 
         gc.disable()
 
-        bar = tqdm(total=249308459)
+        bar = tqdm(total=573661)
         for event, elem in self.context:
 
-            if (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}accession":
+            if (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}accession":
                 if current_protein_accession is None:
                     accession = elem.text
                     current_protein_accession = accession
 
-            elif (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}sequence":
+            elif (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}sequence":
                 if current_protein_sequence is None:
                     sequence = elem.text
                     current_protein_sequence = sequence
 
-            elif (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}name":
+            elif (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}name":
                 if current_name is None:
                     name = elem.text
                     current_name = name
 
-            elif (event == "start" or event == "end") and elem.tag == "{http://uniprot.org/uniprot}dbReference":
+            elif (event == "start" or event == "end") and elem.tag == "{https://uniprot.org/uniprot}dbReference":
                 if elem.attrib. \
                         has_key("type") and elem.attrib["type"] == "EC":
                     have_EC = True
@@ -193,17 +193,17 @@ class UniprotEnzymesNonEnzymesXmlParser(UniprotXmlParser):
                         current_ECs.append(elem.attrib["id"])
 
             elif self.taxonomy_restrictions is not None:
-                if (event == "start") and elem.tag == "{http://uniprot.org/uniprot}organism":
-                    name = elem.find('.//{http://uniprot.org/uniprot}name')
-                    taxons = elem.findall('.//{http://uniprot.org/uniprot}taxon')
+                if (event == "start") and elem.tag == "{https://uniprot.org/uniprot}organism":
+                    name = elem.find('.//{https://uniprot.org/uniprot}name')
+                    taxons = elem.findall('.//{https://uniprot.org/uniprot}taxon')
                     for taxon in taxons:
                         if taxon.text == self.taxonomy_restrictions:
                             current_species = name.text
-                            current_taxonomy_id = elem.find('.//{http://uniprot.org/uniprot}dbReference').attrib["id"]
+                            current_taxonomy_id = elem.find('.//{https://uniprot.org/uniprot}dbReference').attrib["id"]
                             current_lineage.extend([taxon_copy.text for taxon_copy in taxons if taxon_copy.text is not None])
                             
 
-            if event == "end" and elem.tag == "{http://uniprot.org/uniprot}entry":
+            if event == "end" and elem.tag == "{https://uniprot.org/uniprot}entry":
                 bar.update(1)
 
                 
