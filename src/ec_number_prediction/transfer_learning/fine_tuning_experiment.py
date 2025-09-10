@@ -6,10 +6,10 @@ import pandas as pd
 from plants_sm.hyperparameter_optimization.experiment import Experiment
 from plants_sm.data_structures.dataset.single_input_dataset import SingleInputDataset
 
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from ec_number_prediction.transfer_learning.models import FineTuneModelECNumber, ModelECNumber
 from plants_sm.models.lightning_model import InternalLightningModel
-from lightning.pytorch.callbacks import EarlyStopping
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 
 def f1_macro(y_true, y_pred):
     return f1_score(y_true, y_pred, average="macro", zero_division=0)
@@ -17,6 +17,7 @@ def f1_macro(y_true, y_pred):
 class FineTuneExperiment(Experiment):
     def __init__(self, datasets, path_to_model, baseline = False, results_output_file="results.csv", base_layers=[2560], input_dim=1024, classification_neurons=643,
                 folder_path="trials", metric = f1_macro, **kwargs):
+        
         super().__init__(**kwargs)
 
         self.folder_path = folder_path
@@ -264,21 +265,47 @@ class FineTuneExperimentTFvsNoTF(FineTuneExperiment):
                         metric=f1_macro):
             
         module = ModelECNumber(input_dim=input_dim, layers=base_layers + layers, classification_neurons=classification_neurons, 
-            metric=metric, learning_rate=learning_rate)
+            metric=metric, learning_rate=learning_rate, scheduler=False)
         
-        callbacks = EarlyStopping("val_metric", patience=5, mode="max")
-        
-        model = InternalLightningModel(module=module, max_epochs=200,
+        early_stopping = EarlyStopping("val_metric", patience=5, mode="max")
+
+        callbacks = [early_stopping]
+
+        model = InternalLightningModel(module=module, max_epochs=50,
                 batch_size=batch_size,
                 devices=[1],
                 accelerator="gpu",
-                # strategy="fsdp",
-                callbacks=[callbacks])
+                callbacks=callbacks)
         
         model.fit(train_dataset, validation_set)
+
+        model.reset_weights()
+    
+        best_epoch = (model.trainer.current_epoch - 1) - early_stopping.wait_count
+
+        train_dataset.merge(validation_set)
+
+        module = ModelECNumber(input_dim=input_dim, layers=base_layers + layers, classification_neurons=classification_neurons, 
+            metric=metric, learning_rate=learning_rate, scheduler=False)
+        
+
+        model = InternalLightningModel(module=module, max_epochs=best_epoch,
+                batch_size=batch_size,
+                devices=[1],
+                accelerator="gpu")
+
+        model.fit(train_dataset)
+
         predictions = model.predict(test_dataset)
 
-        return metric(test_dataset.y, predictions)
+        other_metrics = {
+            "f1": f1_score(test_dataset.y, predictions),
+            "recall": recall_score(test_dataset.y, predictions),
+            "precision": precision_score(test_dataset.y, predictions),
+            "accuracy": accuracy_score(test_dataset.y, predictions)
+        }
+
+        return metric(test_dataset.y, predictions), other_metrics
 
     @staticmethod
     def fine_tune_with_no_layers(train_dataset: SingleInputDataset, test_dataset: SingleInputDataset, validation_set: SingleInputDataset,
@@ -290,21 +317,52 @@ class FineTuneExperimentTFvsNoTF(FineTuneExperiment):
 
         module = FineTuneModelECNumber(input_dim=input_dim, additional_layers=additional_layers, classification_neurons=classification_neurons, \
             path_to_model=path_to_model,
-            metric=metric, learning_rate=learning_rate, base_layers=base_layers, layers_to_freeze=len(base_layers))
+            metric=metric, learning_rate=learning_rate, base_layers=base_layers, layers_to_freeze=len(base_layers), scheduler=False)
         
-        callbacks = EarlyStopping("val_metric", patience=5, mode="max")
-        
-        model = InternalLightningModel(module=module, max_epochs=200,
+        early_stopping = EarlyStopping("val_metric", patience=5, mode="max")
+
+        callbacks = [early_stopping]
+
+        model = InternalLightningModel(module=module, max_epochs=50,
                 batch_size=batch_size,
-                devices=[0],
+                devices=[1],
                 accelerator="gpu",
-                # strategy="fsdp",
-                callbacks=[callbacks])
+                callbacks=callbacks)
         
         model.fit(train_dataset, validation_set)
+
+        model.reset_weights()
+    
+        best_epoch = (model.trainer.current_epoch - 1) - early_stopping.wait_count
+
+        with open("test_epochs.log", "a+") as f:
+            f.write(f"Best epoch: {best_epoch}\n")
+            f.write(f"Wait count: {early_stopping.wait_count}\n")
+
+        module = FineTuneModelECNumber(input_dim=input_dim, additional_layers=additional_layers, classification_neurons=classification_neurons, \
+            path_to_model=path_to_model,
+            metric=metric, learning_rate=learning_rate, base_layers=base_layers, layers_to_freeze=len(base_layers), scheduler=False)
+        
+
+        model = InternalLightningModel(module=module, max_epochs=best_epoch,
+                batch_size=batch_size,
+                devices=[1],
+                accelerator="gpu")
+
+
+        train_dataset.merge(validation_set)
+        model.fit(train_dataset)
+
         predictions = model.predict(test_dataset)
 
-        return metric(test_dataset.y, predictions)
+        other_metrics = {
+            "f1": f1_score(test_dataset.y, predictions),
+            "recall": recall_score(test_dataset.y, predictions),
+            "precision": precision_score(test_dataset.y, predictions),
+            "accuracy": accuracy_score(test_dataset.y, predictions)
+        }
+
+        return metric(test_dataset.y, predictions), other_metrics
 
 
     def objective(self, trial: optuna.trial.Trial) -> float:
@@ -330,17 +388,17 @@ class FineTuneExperimentTFvsNoTF(FineTuneExperiment):
         else:
             results = pd.DataFrame(columns=["Model type", "Trial", "Fold", self.metric.__name__])
         for train_dataset, test_dataset, validation_set in self.datasets:
-            metric_value = self.fine_tune_with_no_layers(train_dataset, test_dataset, validation_set, additional_layers=additional_layers, batch_size=batch_size, learning_rate=learning_rate,
+            metric_value, other_metrics = self.fine_tune_with_no_layers(train_dataset, test_dataset, validation_set, additional_layers=additional_layers, batch_size=batch_size, learning_rate=learning_rate,
                                                      path_to_model=self.path_to_model, input_dim=self.input_dim, classification_neurons=self.classification_neurons,
                                                      base_layers=self.base_layers, metric=self.metric)
 
-            results = pd.concat([results, pd.DataFrame({"Model type": ["TF"], "Trial": [f"{trial.number}"], "Fold": [i], self.metric.__name__: [metric_value]})], ignore_index=True)
+            results = pd.concat([results, pd.DataFrame({"Model type": ["TF"], "Trial": [f"{trial.number}"], "Fold": [i], self.metric.__name__: [metric_value], **other_metrics})], ignore_index=True)
 
-            metric_value = self.train_baseline(train_dataset, test_dataset, validation_set, batch_size=batch_size, learning_rate=learning_rate,
+            metric_value, other_metrics = self.train_baseline(train_dataset, test_dataset, validation_set, batch_size=batch_size, learning_rate=learning_rate,
                                             layers=additional_layers, input_dim=self.input_dim, classification_neurons=self.classification_neurons,
                                             base_layers=self.base_layers, metric=self.metric)
 
-            results = pd.concat([results, pd.DataFrame({"Model type": ["No TF"], "Trial": [f"{trial.number}"], "Fold": [i], self.metric.__name__: [metric_value]})], ignore_index=True)
+            results = pd.concat([results, pd.DataFrame({"Model type": ["No TF"], "Trial": [f"{trial.number}"], "Fold": [i], self.metric.__name__: [metric_value], **other_metrics})], ignore_index=True)
             i+=1
             results.to_csv(self.results_output_file, index=False)
         
